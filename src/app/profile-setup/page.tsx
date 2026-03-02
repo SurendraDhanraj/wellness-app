@@ -183,21 +183,21 @@ export default function ProfileSetupPage() {
                             <label className="input-label">Business Unit *</label>
                             <select className="input select" value={form.businessUnitId} onChange={(e) => set("businessUnitId", e.target.value)} id="business-unit">
                                 <option value="">Select Business Unit</option>
-                                {businessUnits.filter((b) => b.isActive).map((b) => <option key={b._id} value={b._id}>{b.name}</option>)}
+                                {businessUnits.filter((b: any) => b.isActive).map((b: any) => <option key={b._id} value={b._id}>{b.name}</option>)}
                             </select>
                         </div>
                         <div className="input-group">
                             <label className="input-label">Department *</label>
                             <select className="input select" value={form.departmentId} onChange={(e) => set("departmentId", e.target.value)} id="department">
                                 <option value="">Select Department</option>
-                                {departments.filter((d) => d.isActive).map((d) => <option key={d._id} value={d._id}>{d.name}</option>)}
+                                {departments.filter((d: any) => d.isActive).map((d: any) => <option key={d._id} value={d._id}>{d.name}</option>)}
                             </select>
                         </div>
                         <div className="input-group">
                             <label className="input-label">Location *</label>
                             <select className="input select" value={form.locationId} onChange={(e) => set("locationId", e.target.value)} id="location">
                                 <option value="">Select Office Location</option>
-                                {locations.filter((l) => l.isActive).map((l) => <option key={l._id} value={l._id}>{l.name}</option>)}
+                                {locations.filter((l: any) => l.isActive).map((l: any) => <option key={l._id} value={l._id}>{l.name}</option>)}
                             </select>
                         </div>
                         <div className="input-group">
@@ -229,9 +229,9 @@ export default function ProfileSetupPage() {
                         <div className="card">
                             <p style={{ fontSize: 13, fontWeight: 600, color: "var(--color-text-secondary)", marginBottom: "var(--spacing-md)", textTransform: "uppercase", letterSpacing: "0.05em" }}>Organisation</p>
                             {[
-                                ["Business Unit", businessUnits.find((b) => b._id === form.businessUnitId)?.name || "—"],
-                                ["Department", departments.find((d) => d._id === form.departmentId)?.name || "—"],
-                                ["Location", locations.find((l) => l._id === form.locationId)?.name || "—"],
+                                ["Business Unit", businessUnits.find((b: any) => b._id === form.businessUnitId)?.name || "—"],
+                                ["Department", departments.find((d: any) => d._id === form.departmentId)?.name || "—"],
+                                ["Location", locations.find((l: any) => l._id === form.locationId)?.name || "—"],
                             ].map(([l, v]) => (
                                 <div key={l} style={{ display: "flex", justifyContent: "space-between", padding: "10px 0", borderBottom: "1px solid var(--color-border)" }}>
                                     <span style={{ fontSize: 14, color: "var(--color-text-secondary)" }}>{l}</span>

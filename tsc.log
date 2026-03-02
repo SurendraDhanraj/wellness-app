@@ -1,0 +1,12 @@
+﻿convex/auth.ts(32,14): error TS7022: 'login' implicitly has type 'any' because it does not have a type annotation and is referenced directly or indirectly in its own initializer.
+convex/auth.ts(34,5): error TS7023: 'handler' implicitly has return type 'any' because it does not have a return type annotation and is referenced directly or indirectly in one of its return expressions.
+convex/auth.ts(35,15): error TS7022: 'user' implicitly has type 'any' because it does not have a type annotation and is referenced directly or indirectly in its own initializer.
+src/app/profile-setup/page.tsx(186,56): error TS7006: Parameter 'b' implicitly has an 'any' type.
+src/app/profile-setup/page.tsx(186,79): error TS7006: Parameter 'b' implicitly has an 'any' type.
+src/app/profile-setup/page.tsx(193,54): error TS7006: Parameter 'd' implicitly has an 'any' type.
+src/app/profile-setup/page.tsx(193,77): error TS7006: Parameter 'd' implicitly has an 'any' type.
+src/app/profile-setup/page.tsx(200,52): error TS7006: Parameter 'l' implicitly has an 'any' type.
+src/app/profile-setup/page.tsx(200,75): error TS7006: Parameter 'l' implicitly has an 'any' type.
+src/app/profile-setup/page.tsx(232,71): error TS7006: Parameter 'b' implicitly has an 'any' type.
+src/app/profile-setup/page.tsx(233,66): error TS7006: Parameter 'd' implicitly has an 'any' type.
+src/app/profile-setup/page.tsx(234,62): error TS7006: Parameter 'l' implicitly has an 'any' type.

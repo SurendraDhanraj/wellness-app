@@ -31,7 +31,7 @@ export const createInitialSuperAdmin = action({
 
 export const login = action({
     args: { email: v.string(), password: v.string() },
-    handler: async (ctx, args) => {
+    handler: async (ctx, args): Promise<{ success: boolean; error?: string; token?: string; user?: any }> => {
         const user = await ctx.runQuery(api.users.getUserByEmail, { email: args.email });
         if (!user) return { success: false, error: "Invalid credentials" };
         if (!user.isActive) return { success: false, error: "Account is deactivated" };
