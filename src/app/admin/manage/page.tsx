@@ -23,9 +23,14 @@ export default function AdminManagePage() {
     useEffect(() => {
         const stored = localStorage.getItem("heritage_auth");
         if (!stored) { router.replace("/login"); return; }
-        const a = JSON.parse(stored);
-        if (a.role === "employee") { router.replace("/dashboard"); return; }
-        setAuth(a);
+        try {
+            const a = JSON.parse(stored);
+            if (!a || a.role === "employee") { router.replace("/dashboard"); return; }
+            setAuth(a);
+        } catch {
+            localStorage.removeItem("heritage_auth");
+            router.replace("/login");
+        }
     }, [router]);
 
     const activities = useQuery(api.activities.getAllActivitiesAdmin) || [];

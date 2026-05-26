@@ -299,19 +299,22 @@ export default function AdminSettingsPage() {
                                 { label: "Bulk User Import (CSV)", icon: Users, id: "bulk-import" },
                                 { label: "Manage Admins", icon: Users, href: "/admin/admins" }
                             ] : []),
-                        ].map((item) => (
-                            <div key={item.label} className="list-item admin" style={{ cursor: "pointer" }} onClick={() => {
-                                if (item.id === "bulk-import") {
-                                    setShowBulkImport(true);
-                                } else if (item.href) {
-                                    router.push(item.href);
-                                }
-                            }}>
-                                <div className="icon-wrap admin"><item.icon size={18} /></div>
-                                <div className="list-item-content"><p className="list-item-title admin">{item.label}</p></div>
-                                <ChevronRight size={16} color="var(--color-admin-text-muted)" />
-                            </div>
-                        ))}
+                        ].map((item) => {
+                            const IconComponent = item.icon;
+                            return (
+                                <div key={item.label} className="list-item admin" style={{ cursor: "pointer" }} onClick={() => {
+                                    if (item.id === "bulk-import") {
+                                        setShowBulkImport(true);
+                                    } else if (item.href) {
+                                        router.push(item.href);
+                                    }
+                                }}>
+                                    <div className="icon-wrap admin"><IconComponent size={18} /></div>
+                                    <div className="list-item-content"><p className="list-item-title admin">{item.label}</p></div>
+                                    <ChevronRight size={16} color="var(--color-admin-text-muted)" />
+                                </div>
+                            );
+                        })}
 
                         {/* Sign out */}
                         <div style={{ marginTop: "var(--spacing-xl)" }}>

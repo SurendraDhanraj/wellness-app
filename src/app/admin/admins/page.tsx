@@ -19,9 +19,14 @@ export default function AdminAdminsPage() {
     useEffect(() => {
         const stored = localStorage.getItem("heritage_auth");
         if (!stored) { router.replace("/login"); return; }
-        const a = JSON.parse(stored);
-        if (a.role !== "super_admin") { router.replace("/admin/dashboard"); return; }
-        setAuth(a);
+        try {
+            const a = JSON.parse(stored);
+            if (!a || a.role !== "super_admin") { router.replace("/admin/dashboard"); return; }
+            setAuth(a);
+        } catch {
+            localStorage.removeItem("heritage_auth");
+            router.replace("/login");
+        }
     }, [router]);
 
     const admins = useQuery(api.users.getAllAdmins) || [];
