@@ -51,7 +51,7 @@ export default function AdminSettingsPage() {
         if (!editingUser || !adminResetPassword.trim() || adminResetPasswordProcessing) return;
         setAdminResetPasswordProcessing(true);
         try {
-            const token = auth?.token || localStorage.getItem("heritage_auth") ? JSON.parse(localStorage.getItem("heritage_auth")!).token : "";
+            const token = auth?.token || "";
             const res = await adminResetUserPasswordAction({
                 userId: editingUser._id,
                 newPassword: adminResetPassword.trim(),
@@ -75,9 +75,14 @@ export default function AdminSettingsPage() {
     useEffect(() => {
         const stored = localStorage.getItem("heritage_auth");
         if (!stored) { router.replace("/login"); return; }
-        const a = JSON.parse(stored);
-        if (a.role === "employee") { router.replace("/dashboard"); return; }
-        setAuth(a);
+        try {
+            const a = JSON.parse(stored);
+            if (!a || a.role === "employee") { router.replace("/dashboard"); return; }
+            setAuth(a);
+        } catch (e) {
+            localStorage.removeItem("heritage_auth");
+            router.replace("/login");
+        }
     }, [router]);
 
     const handleLogout = () => {
@@ -152,7 +157,7 @@ export default function AdminSettingsPage() {
         setImportError("");
         try {
             const res = await batchInvite({
-                adminToken: auth.token || localStorage.getItem("heritage_auth") ? JSON.parse(localStorage.getItem("heritage_auth")!).token : "",
+                adminToken: auth?.token || "",
                 employees: parsedUsers,
             });
             if (res.success) {
@@ -240,6 +245,7 @@ export default function AdminSettingsPage() {
     };
 
     const filteredUsers = allUsers.filter((user: any) => {
+        if (!user) return false;
         const query = searchQuery.toLowerCase().trim();
         if (!query) return true;
         const fullName = `${user.firstName || ""} ${user.surname || ""}`.toLowerCase();
