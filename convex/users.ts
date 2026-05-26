@@ -32,6 +32,10 @@ export const createUser = mutation({
         mustChangePassword: v.boolean(),
         isActive: v.boolean(),
         createdAt: v.number(),
+        firstName: v.optional(v.string()),
+        surname: v.optional(v.string()),
+        gender: v.optional(v.union(v.literal("male"), v.literal("female"), v.literal("other"))),
+        dateOfBirth: v.optional(v.string()),
     },
     handler: async (ctx, args) => {
         return await ctx.db.insert("users", args);
@@ -94,9 +98,43 @@ export const getAllAdmins = query({
 });
 
 export const updateUserRole = mutation({
-    args: { userId: v.id("users"), role: v.union(v.literal("admin"), v.literal("employee")) },
+    args: { userId: v.id("users"), role: v.union(v.literal("super_admin"), v.literal("admin"), v.literal("employee")) },
     handler: async (ctx, args) => {
         await ctx.db.patch(args.userId, { role: args.role });
+    },
+});
+
+export const getAllUsers = query({
+    args: {},
+    handler: async (ctx) => {
+        return await ctx.db.query("users").collect();
+    },
+});
+
+export const superAdminUpdateUser = mutation({
+    args: {
+        userId: v.id("users"),
+        email: v.string(),
+        firstName: v.optional(v.string()),
+        surname: v.optional(v.string()),
+        gender: v.optional(v.union(v.literal("male"), v.literal("female"), v.literal("other"))),
+        dateOfBirth: v.optional(v.string()),
+        role: v.union(v.literal("super_admin"), v.literal("admin"), v.literal("employee")),
+    },
+    handler: async (ctx, args) => {
+        const { userId, ...data } = args;
+        const existing = await ctx.db.query("users").withIndex("by_email", (q) => q.eq("email", data.email)).first();
+        if (existing && existing._id !== userId) {
+            throw new Error("Email already in use by another user.");
+        }
+        await ctx.db.patch(userId, data);
+    },
+});
+
+export const deleteUser = mutation({
+    args: { userId: v.id("users") },
+    handler: async (ctx, args) => {
+        await ctx.db.delete(args.userId);
     },
 });
 
@@ -149,5 +187,66 @@ export const getLeaderboard = query({
             result.push({ ...user, leaderboardValue: value });
         }
         return result.sort((a, b) => b.leaderboardValue - a.leaderboardValue).slice(0, 50);
+    },
+});
+
+export const adminSetUserPassword = mutation({
+    args: {
+        userId: v.id("users"),
+        passwordHash: v.string(),
+        mustChangePassword: v.boolean(),
+    },
+    handler: async (ctx, args) => {
+        await ctx.db.patch(args.userId, {
+            passwordHash: args.passwordHash,
+            mustChangePassword: args.mustChangePassword,
+        });
+    },
+});
+
+export const setUserRecoveryCode = mutation({
+    args: {
+        userId: v.id("users"),
+        recoveryCode: v.string(),
+        recoveryCodeExpires: v.number(),
+    },
+    handler: async (ctx, args) => {
+        await ctx.db.patch(args.userId, {
+            recoveryCode: args.recoveryCode,
+            recoveryCodeExpires: args.recoveryCodeExpires,
+        });
+    },
+});
+
+export const setUserRecoveryToken = mutation({
+    args: {
+        userId: v.id("users"),
+        recoveryToken: v.string(),
+        recoveryTokenExpires: v.number(),
+    },
+    handler: async (ctx, args) => {
+        await ctx.db.patch(args.userId, {
+            recoveryToken: args.recoveryToken,
+            recoveryTokenExpires: args.recoveryTokenExpires,
+            recoveryCode: undefined,
+            recoveryCodeExpires: undefined,
+        });
+    },
+});
+
+export const completeUserPasswordReset = mutation({
+    args: {
+        userId: v.id("users"),
+        passwordHash: v.string(),
+    },
+    handler: async (ctx, args) => {
+        await ctx.db.patch(args.userId, {
+            passwordHash: args.passwordHash,
+            recoveryToken: undefined,
+            recoveryTokenExpires: undefined,
+            recoveryCode: undefined,
+            recoveryCodeExpires: undefined,
+            mustChangePassword: false,
+        });
     },
 });

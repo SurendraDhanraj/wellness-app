@@ -22,6 +22,10 @@ export default defineSchema({
     mustChangePassword: v.boolean(),
     isActive: v.boolean(),
     createdAt: v.number(),
+    recoveryCode: v.optional(v.string()),
+    recoveryCodeExpires: v.optional(v.number()),
+    recoveryToken: v.optional(v.string()),
+    recoveryTokenExpires: v.optional(v.number()),
   })
     .index("by_email", ["email"])
     .index("by_role", ["role"]),

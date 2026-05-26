@@ -3,7 +3,7 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useQuery, useMutation } from "convex/react";
 import { api } from "../../../convex/_generated/api";
-import { Bell, Heart, MessageSquare, Share2, Send } from "lucide-react";
+import { Bell, Heart, MessageSquare, Share2, Send, X } from "lucide-react";
 import { EmployeeBottomNav } from "@/components/BottomNav";
 import { format } from "date-fns";
 
@@ -16,6 +16,11 @@ export default function CommunityPage() {
     const [content, setContent] = useState("");
     const [posting, setPosting] = useState(false);
 
+    // Comments/Thread states
+    const [selectedPost, setSelectedPost] = useState<any>(null);
+    const [commentContent, setCommentContent] = useState("");
+    const [postingComment, setPostingComment] = useState(false);
+
     useEffect(() => {
         const stored = localStorage.getItem("heritage_auth");
         if (!stored) { router.replace("/login"); return; }
@@ -23,6 +28,7 @@ export default function CommunityPage() {
     }, [router]);
 
     const messages = useQuery(api.messages.getMessages, { group }) || [];
+    const replies = useQuery(api.messages.getReplies, selectedPost ? { parentId: selectedPost._id } : "skip") || [];
     const postMessage = useMutation(api.messages.postMessage);
     const toggleLike = useMutation(api.messages.toggleLike);
 
@@ -34,6 +40,22 @@ export default function CommunityPage() {
             setContent("");
         } finally {
             setPosting(false);
+        }
+    };
+
+    const handlePostComment = async () => {
+        if (!auth || !selectedPost || !commentContent.trim() || postingComment) return;
+        setPostingComment(true);
+        try {
+            await postMessage({
+                userId: auth.id,
+                content: commentContent.trim(),
+                group: selectedPost.group,
+                parentId: selectedPost._id,
+            });
+            setCommentContent("");
+        } finally {
+            setPostingComment(false);
         }
     };
 
@@ -109,7 +131,11 @@ export default function CommunityPage() {
                             <button onClick={() => auth && toggleLike({ messageId: m._id, userId: auth.id })} style={{ display: "flex", alignItems: "center", gap: 4, background: "none", border: "none", cursor: "pointer", fontSize: 13, color: m.likes?.includes(auth?.id) ? "var(--color-primary)" : "var(--color-text-secondary)", fontWeight: m.likes?.includes(auth?.id) ? 600 : 400 }}>
                                 <Heart size={16} fill={m.likes?.includes(auth?.id) ? "var(--color-primary)" : "none"} /> {m.likes?.length ?? 0}
                             </button>
-                            <button style={{ display: "flex", alignItems: "center", gap: 4, background: "none", border: "none", cursor: "pointer", fontSize: 13, color: "var(--color-text-secondary)" }}>
+                            <button 
+                                onClick={() => setSelectedPost(m)}
+                                style={{ display: "flex", alignItems: "center", gap: 4, background: "none", border: "none", cursor: "pointer", fontSize: 13, color: "var(--color-text-secondary)" }}
+                                id={`reply-btn-${m._id}`}
+                            >
                                 <MessageSquare size={16} /> {m.replyCount ?? 0}
                             </button>
                             <button style={{ marginLeft: "auto", background: "none", border: "none", cursor: "pointer", color: "var(--color-text-secondary)" }}>
@@ -119,6 +145,97 @@ export default function CommunityPage() {
                     </div>
                 ))}
             </main>
+
+            {/* Thread/Comments Bottom Sheet Modal */}
+            {selectedPost && (
+                <div className="modal-overlay" onClick={() => { if (!postingComment) setSelectedPost(null); }}>
+                    <div className="modal-sheet" onClick={(e) => e.stopPropagation()} style={{ maxHeight: "85dvh", display: "flex", flexDirection: "column" }}>
+                        <div className="modal-handle" />
+                        
+                        {/* Header */}
+                        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "var(--spacing-md)", flexShrink: 0 }}>
+                            <h2 className="modal-title" style={{ marginBottom: 0 }}>Discussion</h2>
+                            <button 
+                                onClick={() => { if (!postingComment) setSelectedPost(null); }}
+                                style={{ background: "none", border: "none", cursor: "pointer", color: "var(--color-text-secondary)" }}
+                            >
+                                <X size={20} />
+                            </button>
+                        </div>
+
+                        {/* Scrollable Container */}
+                        <div style={{ flex: 1, overflowY: "auto", paddingRight: 4, marginBottom: "var(--spacing-md)" }}>
+                            {/* Original Post Card */}
+                            <div className="card" style={{ marginBottom: "var(--spacing-lg)", border: "1.5px solid var(--color-primary-light)" }}>
+                                <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 10 }}>
+                                    <div className="avatar-placeholder" style={{ width: 36, height: 36, fontSize: 14 }}>{(selectedPost.user?.firstName || "?")[0]}</div>
+                                    <div style={{ flex: 1 }}>
+                                        <p style={{ fontWeight: 600, fontSize: 13 }}>{selectedPost.user?.firstName} {selectedPost.user?.surname}</p>
+                                        <p style={{ fontSize: 11, color: "var(--color-text-secondary)" }}>{timeAgo(selectedPost.createdAt)}</p>
+                                    </div>
+                                </div>
+                                <p style={{ fontSize: 13, lineHeight: 1.5, marginBottom: 8 }}>{selectedPost.content}</p>
+                                {selectedPost.mediaUrl && <img src={selectedPost.mediaUrl} alt="" style={{ width: "100%", borderRadius: "var(--radius-md)", maxHeight: 150, objectFit: "cover", marginBottom: 8 }} />}
+                                <div style={{ display: "flex", gap: "var(--spacing-md)", borderTop: "1px solid var(--color-border)", paddingTop: 8 }}>
+                                    <button onClick={() => auth && toggleLike({ messageId: selectedPost._id, userId: auth.id })} style={{ display: "flex", alignItems: "center", gap: 4, background: "none", border: "none", cursor: "pointer", fontSize: 12, color: selectedPost.likes?.includes(auth?.id) ? "var(--color-primary)" : "var(--color-text-secondary)", fontWeight: selectedPost.likes?.includes(auth?.id) ? 600 : 400 }}>
+                                        <Heart size={14} fill={selectedPost.likes?.includes(auth?.id) ? "var(--color-primary)" : "none"} /> {selectedPost.likes?.length ?? 0}
+                                    </button>
+                                </div>
+                            </div>
+
+                            {/* Comments Header */}
+                            <h3 style={{ fontSize: 14, fontWeight: 700, color: "var(--color-text-primary)", marginBottom: "var(--spacing-sm)" }}>
+                                Comments ({replies.length})
+                            </h3>
+
+                            {/* Comments List */}
+                            {replies.length === 0 ? (
+                                <div style={{ textAlign: "center", padding: "20px 0", color: "var(--color-text-muted)" }}>
+                                    <p style={{ fontSize: 13 }}>No comments yet. Start the conversation!</p>
+                                </div>
+                            ) : (
+                                <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+                                    {replies.map((reply: any) => (
+                                        <div key={reply._id} style={{ display: "flex", gap: 10, alignItems: "flex-start" }}>
+                                            <div className="avatar-placeholder" style={{ width: 32, height: 32, fontSize: 12, flexShrink: 0 }}>{(reply.user?.firstName || "?")[0]}</div>
+                                            <div style={{ background: "var(--color-employee-bg)", padding: "10px 12px", borderRadius: "0 12px 12px 12px", fontSize: 13, color: "var(--color-text-primary)", flex: 1 }}>
+                                                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: 2 }}>
+                                                    <span style={{ fontWeight: 700, fontSize: 12 }}>{reply.user?.firstName} {reply.user?.surname}</span>
+                                                    <span style={{ fontSize: 10, color: "var(--color-text-secondary)" }}>{timeAgo(reply.createdAt)}</span>
+                                                </div>
+                                                <p style={{ lineHeight: 1.4, wordBreak: "break-word" }}>{reply.content}</p>
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            )}
+                        </div>
+
+                        {/* Comment Input Composer */}
+                        <div style={{ display: "flex", gap: 8, alignItems: "center", borderTop: "1px solid var(--color-border)", paddingTop: "var(--spacing-sm)", flexShrink: 0 }}>
+                            <input 
+                                className="input" 
+                                style={{ flex: 1, padding: "10px var(--spacing-sm)", fontSize: 13, height: "auto" }}
+                                placeholder="Write a comment..." 
+                                value={commentContent} 
+                                onChange={(e) => setCommentContent(e.target.value)} 
+                                onKeyDown={(e) => { if (e.key === "Enter") handlePostComment(); }}
+                                id="comment-input"
+                                disabled={postingComment}
+                            />
+                            <button 
+                                className="btn btn-primary" 
+                                style={{ padding: "10px 14px", height: "auto" }}
+                                onClick={handlePostComment}
+                                disabled={!commentContent.trim() || postingComment}
+                                id="send-comment-btn"
+                            >
+                                <Send size={14} />
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
 
             <EmployeeBottomNav />
         </div>

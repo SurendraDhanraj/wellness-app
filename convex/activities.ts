@@ -158,3 +158,92 @@ export const verifySubmission = mutation({
         }
     },
 });
+
+export const bulkVerifyEnrollments = mutation({
+    args: {
+        activityId: v.id("activities"),
+        rows: v.array(v.string()),
+        adminId: v.id("users"),
+    },
+    handler: async (ctx, args) => {
+        const activity = await ctx.db.get(args.activityId);
+        if (!activity) throw new Error("Activity not found.");
+
+        const results = [];
+        for (const row of args.rows) {
+            const cleanRow = row.trim();
+            if (!cleanRow) continue;
+
+            let user = null;
+            if (cleanRow.includes('@')) {
+                user = await ctx.db.query("users").withIndex("by_email", (q) => q.eq("email", cleanRow.toLowerCase())).first();
+            } else {
+                let firstName = "";
+                let surname = "";
+                if (cleanRow.includes(',')) {
+                    const parts = cleanRow.split(',').map(p => p.trim());
+                    surname = parts[0];
+                    firstName = parts[1];
+                } else {
+                    const parts = cleanRow.split(/\s+/).map(p => p.trim());
+                    firstName = parts[0];
+                    surname = parts.slice(1).join(' ');
+                }
+                
+                const allEmployees = await ctx.db.query("users").withIndex("by_role", (q) => q.eq("role", "employee")).collect();
+                user = allEmployees.find(u => {
+                    const uFirst = (u.firstName || "").trim().toLowerCase();
+                    const uLast = (u.surname || "").trim().toLowerCase();
+                    return uFirst === firstName.toLowerCase() && uLast === surname.toLowerCase();
+                });
+            }
+
+            if (!user) {
+                results.push({ identifier: cleanRow, success: false, status: "User Not Found" });
+                continue;
+            }
+
+            const existing = await ctx.db.query("enrollments")
+                .withIndex("by_user_activity", (q) => q.eq("userId", user._id).eq("activityId", args.activityId))
+                .first();
+
+            if (existing) {
+                if (existing.status === "verified") {
+                    results.push({ identifier: cleanRow, name: `${user.firstName} ${user.surname}`, success: true, status: "Already Verified" });
+                    continue;
+                }
+
+                await ctx.db.patch(existing._id, {
+                    status: "verified",
+                    completedAt: existing.completedAt || Date.now(),
+                    verifiedBy: args.adminId,
+                    verifiedAt: Date.now(),
+                });
+            } else {
+                await ctx.db.insert("enrollments", {
+                    userId: user._id,
+                    activityId: args.activityId,
+                    enrolledAt: Date.now(),
+                    completedAt: Date.now(),
+                    status: "verified",
+                    verifiedBy: args.adminId,
+                    verifiedAt: Date.now(),
+                });
+            }
+
+            await ctx.db.patch(user._id, { totalPoints: user.totalPoints + activity.points });
+            await ctx.db.insert("notifications", {
+                userId: user._id,
+                type: "verification",
+                title: "Activity Approved! 🎉",
+                body: `You have been bulk-verified for "${activity.name}". You've earned ${activity.points} points!`,
+                isRead: false,
+                createdAt: Date.now(),
+            });
+
+            results.push({ identifier: cleanRow, name: `${user.firstName || "Incomplete"} ${user.surname || "Profile"}`, success: true, status: "Verified Successfully" });
+        }
+
+        return { success: true, results };
+    },
+});

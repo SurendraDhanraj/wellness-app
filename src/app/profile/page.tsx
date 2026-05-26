@@ -3,13 +3,14 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useQuery } from "convex/react";
 import { api } from "../../../convex/_generated/api";
-import { LogOut, User, Shield, Mail, Phone, Calendar, Building2, ChevronRight } from "lucide-react";
+import { LogOut, User, Shield, Mail, Phone, Calendar, Building2, ChevronRight, QrCode } from "lucide-react";
 import { EmployeeBottomNav } from "@/components/BottomNav";
 
 export default function ProfilePage() {
     const router = useRouter();
     const [auth, setAuth] = useState<any>(null);
     const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
+    const [showQRModal, setShowQRModal] = useState(false);
 
     useEffect(() => {
         const stored = localStorage.getItem("heritage_auth");
@@ -70,6 +71,32 @@ export default function ProfilePage() {
                     </div>
                 </div>
 
+                {/* QR Code Wellness Pass Button */}
+                <div 
+                    className="card" 
+                    style={{ 
+                        display: "flex", 
+                        alignItems: "center", 
+                        gap: 12, 
+                        padding: "var(--spacing-md)", 
+                        marginBottom: "var(--spacing-md)", 
+                        background: "var(--color-primary-light)", 
+                        cursor: "pointer", 
+                        border: "1px solid var(--color-primary-light)" 
+                    }} 
+                    onClick={() => setShowQRModal(true)}
+                    id="my-wellness-pass-btn"
+                >
+                    <div className="icon-wrap" style={{ background: "white", color: "var(--color-primary)" }}>
+                        <QrCode size={20} />
+                    </div>
+                    <div style={{ flex: 1 }}>
+                        <p style={{ fontWeight: 700, color: "var(--color-text-primary)", fontSize: 14 }}>My Wellness Pass</p>
+                        <p style={{ fontSize: 11, color: "var(--color-text-secondary)" }}>Show QR code for event check-in</p>
+                    </div>
+                    <ChevronRight size={16} color="var(--color-primary)" />
+                </div>
+
                 {/* Quick links */}
                 <h2 className="section-title" style={{ marginBottom: "var(--spacing-sm)" }}>Account</h2>
                 {[
@@ -122,6 +149,50 @@ export default function ProfilePage() {
                                 Sign Out
                             </button>
                         </div>
+                    </div>
+                </div>
+            )}
+
+            {/* QR Code Pass modal */}
+            {showQRModal && (
+                <div className="modal-overlay" onClick={() => setShowQRModal(false)}>
+                    <div className="modal-sheet" onClick={(e) => e.stopPropagation()} style={{ textAlign: "center" }}>
+                        <div className="modal-handle" />
+                        <h2 className="modal-title">My Wellness Pass</h2>
+                        <p style={{ fontSize: 13, color: "var(--color-text-secondary)", marginBottom: "var(--spacing-md)" }}>
+                            Present this QR code to an admin to verify your attendance or check in at wellness events.
+                        </p>
+                        
+                        <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", width: "100%" }}>
+                            <div style={{ 
+                                background: "white", 
+                                padding: "var(--spacing-md)", 
+                                borderRadius: "var(--radius-lg)", 
+                                display: "flex",
+                                alignItems: "center",
+                                justifyContent: "center",
+                                boxShadow: "var(--shadow-md)",
+                                marginBottom: "var(--spacing-md)",
+                                border: "1px solid var(--color-border)"
+                            }}>
+                                <img 
+                                    src={`https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(`HERITAGE-WELLNESS-USER:${auth.id}`)}`}
+                                    alt="Wellness Pass QR Code"
+                                    style={{ width: 200, height: 200, display: "block" }}
+                                />
+                            </div>
+                            
+                            <div style={{ background: "var(--color-employee-bg)", padding: "10px 14px", borderRadius: "var(--radius-md)", display: "inline-block", fontFamily: "monospace", fontSize: 13, color: "var(--color-text-secondary)", fontWeight: 600, letterSpacing: "1px" }}>
+                                PASS: {auth.id.substring(0, 8).toUpperCase()}
+                            </div>
+                        </div>
+                        
+                        <div className="card" style={{ marginTop: "var(--spacing-md)", background: "var(--color-surface)", border: "1px solid var(--color-border)" }}>
+                            <p style={{ fontWeight: 700, color: "var(--color-text-primary)", fontSize: 15 }}>{auth.firstName} {auth.surname}</p>
+                            <p style={{ fontSize: 12, color: "var(--color-text-secondary)", marginTop: 2 }}>{auth.email}</p>
+                        </div>
+                        
+                        <button className="btn btn-secondary btn-full" style={{ marginTop: "var(--spacing-lg)" }} onClick={() => setShowQRModal(false)}>Close Pass</button>
                     </div>
                 </div>
             )}

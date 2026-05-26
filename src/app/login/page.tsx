@@ -87,7 +87,7 @@ export default function LoginPage() {
                         />
                     </div>
 
-                    <div className="input-group">
+                    <div className="input-group" style={{ marginBottom: 12 }}>
                         <label className="input-label">Password</label>
                         <div style={{ position: "relative" }}>
                             <input
@@ -108,6 +108,17 @@ export default function LoginPage() {
                                 {showPw ? <EyeOff size={18} /> : <Eye size={18} />}
                             </button>
                         </div>
+                    </div>
+
+                    <div style={{ display: "flex", justifyContent: "flex-end", marginTop: -6, marginBottom: "var(--spacing-md)" }}>
+                        <button 
+                            type="button" 
+                            onClick={() => router.push("/login/forgot")} 
+                            style={{ background: "none", border: "none", color: "var(--color-primary)", fontSize: 13, fontWeight: 600, cursor: "pointer" }}
+                            id="login-forgot-password-link"
+                        >
+                            Forgot Password?
+                        </button>
                     </div>
 
                     <button

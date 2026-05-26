@@ -573,14 +573,9 @@ textarea.input {
 
 .chip-row {
   display: flex;
-  gap: var(--spacing-xs);
-  overflow-x: auto;
+  flex-wrap: wrap;
+  gap: var(--spacing-xs) var(--spacing-sm);
   padding-bottom: var(--spacing-xs);
-  scrollbar-width: none;
-}
-
-.chip-row::-webkit-scrollbar {
-  display: none;
 }
 
 /* ===== SECTION HEADERS ===== */

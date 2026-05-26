@@ -49,3 +49,19 @@ export const toggleLike = mutation({
         await ctx.db.patch(args.messageId, { likes: newLikes });
     },
 });
+
+export const getReplies = query({
+    args: { parentId: v.id("messages") },
+    handler: async (ctx, args) => {
+        const replies = await ctx.db.query("messages")
+            .withIndex("by_parent", (q) => q.eq("parentId", args.parentId))
+            .order("asc")
+            .collect();
+        const result = [];
+        for (const r of replies) {
+            const user = await ctx.db.get(r.userId);
+            result.push({ ...r, user });
+        }
+        return result;
+    },
+});

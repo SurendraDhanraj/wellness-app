@@ -5,6 +5,7 @@ import { Home, Trophy, Activity, User, Users, Settings } from "lucide-react";
 const employeeNav = [
     { href: "/dashboard", icon: Home, label: "Home" },
     { href: "/leaderboard", icon: Trophy, label: "Leaderboard" },
+    { href: "/bulletin-board", icon: Users, label: "Bulletin" },
     { href: "/activities", icon: Activity, label: "Activities" },
     { href: "/profile", icon: User, label: "Profile" },
 ];

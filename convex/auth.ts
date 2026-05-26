@@ -105,3 +105,185 @@ export const inviteEmployee = action({
         return { success: true, tempPassword };
     },
 });
+
+export const batchInviteEmployees = action({
+    args: {
+        adminToken: v.string(),
+        employees: v.array(
+            v.object({
+                email: v.string(),
+                firstName: v.optional(v.string()),
+                surname: v.optional(v.string()),
+                gender: v.optional(v.union(v.literal("male"), v.literal("female"), v.literal("other"))),
+                dateOfBirth: v.optional(v.string()),
+            })
+        ),
+    },
+    handler: async (ctx, args) => {
+        const adminSession = await ctx.runQuery(api.users.getSessionByToken, { token: args.adminToken });
+        if (!adminSession) return { success: false, error: "Unauthorized" };
+        const admin = await ctx.runQuery(api.users.getUserById, { userId: adminSession.userId });
+        if (!admin || (admin.role !== "admin" && admin.role !== "super_admin")) {
+            return { success: false, error: "Unauthorized" };
+        }
+
+        const results = [];
+        for (const emp of args.employees) {
+            const trimmedEmail = emp.email.trim().toLowerCase();
+            if (!trimmedEmail) continue;
+
+            const existing = await ctx.runQuery(api.users.getUserByEmail, { email: trimmedEmail });
+            if (existing) {
+                results.push({
+                    email: trimmedEmail,
+                    success: false,
+                    error: "Email already registered",
+                });
+                continue;
+            }
+
+            // Create employee with clean 6-char alpha-numeric uppercase temporary password
+            const tempPassword = crypto.randomBytes(3).toString("hex").toUpperCase();
+            const hash = hashPassword(tempPassword);
+            await ctx.runMutation(api.users.createUser, {
+                email: trimmedEmail,
+                passwordHash: hash,
+                role: "employee",
+                isProfileComplete: false,
+                totalPoints: 0,
+                mustChangePassword: true,
+                isActive: true,
+                createdAt: Date.now(),
+                firstName: emp.firstName?.trim() || undefined,
+                surname: emp.surname?.trim() || undefined,
+                gender: emp.gender || undefined,
+                dateOfBirth: emp.dateOfBirth?.trim() || undefined,
+            });
+
+            results.push({
+                email: trimmedEmail,
+                firstName: emp.firstName?.trim(),
+                surname: emp.surname?.trim(),
+                tempPassword,
+                success: true,
+            });
+        }
+
+        return { success: true, results };
+    },
+});
+
+export const adminResetUserPassword = action({
+    args: {
+        userId: v.id("users"),
+        newPassword: v.string(),
+        mustChangePassword: v.boolean(),
+        adminToken: v.string(),
+    },
+    returns: v.any(),
+    handler: async (ctx, args): Promise<any> => {
+        const adminSession = await ctx.runQuery(api.users.getSessionByToken, { token: args.adminToken });
+        if (!adminSession) return { success: false, error: "Unauthorized" };
+
+        const admin = await ctx.runQuery(api.users.getUserById, { userId: adminSession.userId });
+        if (!admin || (admin.role !== "admin" && admin.role !== "super_admin")) {
+            return { success: false, error: "Unauthorized" };
+        }
+
+        const hash = hashPassword(args.newPassword);
+        await ctx.runMutation(api.users.adminSetUserPassword, {
+            userId: args.userId,
+            passwordHash: hash,
+            mustChangePassword: args.mustChangePassword,
+        });
+
+        return { success: true };
+    },
+});
+
+export const requestPasswordRecovery = action({
+    args: { email: v.string() },
+    returns: v.any(),
+    handler: async (ctx, args): Promise<any> => {
+        const cleanEmail = args.email.trim().toLowerCase();
+        const user = await ctx.runQuery(api.users.getUserByEmail, { email: cleanEmail });
+        if (!user) {
+            return { success: true, message: "If this email is registered, a recovery code has been sent." };
+        }
+
+        // Generate 6-digit code
+        const code = Math.floor(100000 + Math.random() * 900000).toString();
+        const expiresAt = Date.now() + 10 * 60 * 1000; // 10 minutes
+
+        await ctx.runMutation(api.users.setUserRecoveryCode, {
+            userId: user._id,
+            recoveryCode: code,
+            recoveryCodeExpires: expiresAt,
+        });
+
+        // Log clearly to the developer console/terminal so the user can easily copy it in local dev!
+        console.log("\n==============================================");
+        console.log("  [MOCK EMAIL SERVICE] Password Recovery Code");
+        console.log(`  To: ${cleanEmail}`);
+        console.log(`  Verification Code: ${code}`);
+        console.log("  Expires in: 10 minutes");
+        console.log("==============================================\n");
+
+        return { 
+            success: true, 
+            message: "A 6-digit verification code has been generated. Check developer server logs to retrieve it.",
+            debugCode: code
+        };
+    },
+});
+
+export const verifyRecoveryCode = action({
+    args: { email: v.string(), code: v.string() },
+    returns: v.any(),
+    handler: async (ctx, args): Promise<any> => {
+        const cleanEmail = args.email.trim().toLowerCase();
+        const user = await ctx.runQuery(api.users.getUserByEmail, { email: cleanEmail });
+        if (!user || !user.recoveryCode || !user.recoveryCodeExpires || user.recoveryCodeExpires < Date.now()) {
+            return { success: false, error: "Invalid or expired verification code." };
+        }
+
+        if (user.recoveryCode !== args.code.trim()) {
+            return { success: false, error: "Invalid or expired verification code." };
+        }
+
+        // Create short-lived recovery token
+        const token = crypto.randomBytes(16).toString("hex");
+        const tokenExpires = Date.now() + 10 * 60 * 1000; // 10 minutes
+
+        await ctx.runMutation(api.users.setUserRecoveryToken, {
+            userId: user._id,
+            recoveryToken: token,
+            recoveryTokenExpires: tokenExpires,
+        });
+
+        return { success: true, recoveryToken: token, userId: user._id };
+    },
+});
+
+export const resetPasswordViaRecovery = action({
+    args: {
+        userId: v.id("users"),
+        recoveryToken: v.string(),
+        newPassword: v.string(),
+    },
+    returns: v.any(),
+    handler: async (ctx, args): Promise<any> => {
+        const user = await ctx.runQuery(api.users.getUserById, { userId: args.userId });
+        if (!user || user.recoveryToken !== args.recoveryToken || !user.recoveryTokenExpires || user.recoveryTokenExpires < Date.now()) {
+            return { success: false, error: "Invalid or expired password reset session." };
+        }
+
+        const hash = hashPassword(args.newPassword);
+        await ctx.runMutation(api.users.completeUserPasswordReset, {
+            userId: args.userId,
+            passwordHash: hash,
+        });
+
+        return { success: true };
+    },
+});
