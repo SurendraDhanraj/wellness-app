@@ -51,7 +51,7 @@ export default function AdminDashboardPage() {
         datasets: [{ data, backgroundColor: `${color}55`, hoverBackgroundColor: color, borderRadius: 8, borderSkipped: false }]
     });
     const barData = makeBarData(departments.slice(0, 8).map((d: any) => d.name.slice(0, 7)), deptData, "#C0244C");
-    const buBarData = makeBarData(businessUnits.slice(0, 8).map((b: any) => b.name.slice(0, 7)), buData, "#7C3AED");
+    const buBarData = makeBarData(businessUnits.slice(0, 12).map((b: any) => b.name), buData, "#7C3AED");
     const locationBarData = makeBarData(locations.slice(0, 8).map((l: any) => l.name.slice(0, 7)), locationData, "#0891B2");
 
     const barOptions = {
@@ -62,6 +62,19 @@ export default function AdminDashboardPage() {
             y: { grid: { color: "#2E415922" }, ticks: { color: "#7A96AE", font: { size: 11 }, precision: 0, stepSize: 1 }, border: { display: false } }
         }
     };
+
+    // Horizontal bar options — BU on y-axis, count on x-axis
+    const buBarOptions = {
+        indexAxis: "y" as const,
+        responsive: true, maintainAspectRatio: false,
+        plugins: { legend: { display: false }, tooltip: { backgroundColor: "#243447", titleColor: "#E8EDF2", bodyColor: "#7A96AE" } },
+        scales: {
+            x: { grid: { color: "#2E415922" }, ticks: { color: "#7A96AE", font: { size: 11 }, precision: 0, stepSize: 1 }, border: { display: false } },
+            y: { grid: { display: false }, ticks: { color: "#7A96AE", font: { size: 11 } }, border: { display: false } }
+        }
+    };
+
+    const buChartHeight = Math.max(140, (businessUnits as any[]).length * 34 + 40);
 
     // Build last-7-days submission counts from real data
     const last7Days = Array.from({ length: 7 }, (_, i) => {
@@ -183,8 +196,8 @@ export default function AdminDashboardPage() {
                     <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "var(--spacing-md)" }}>
                         <p style={{ fontWeight: 700, color: "var(--color-admin-text)" }}>Participation by Business Unit</p>
                     </div>
-                    <div style={{ height: 160 }}>
-                        <Bar data={buBarData} options={barOptions} />
+                    <div style={{ height: buChartHeight }}>
+                        <Bar data={buBarData} options={buBarOptions} />
                     </div>
                 </div>
 
