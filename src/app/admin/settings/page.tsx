@@ -3,7 +3,7 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useAction, useQuery, useMutation } from "convex/react";
 import { api } from "../../../../convex/_generated/api";
-import { LogOut, Shield, ChevronRight, Users, Settings, ClipboardList, Database, Upload, X, Check, AlertCircle, Copy, Download, Search } from "lucide-react";
+import { LogOut, Shield, ChevronRight, Users, Settings, ClipboardList, Database, Upload, X, Check, AlertCircle, Copy, Download, Search, Trash2, CheckSquare, Square } from "lucide-react";
 import { AdminBottomNav } from "@/components/BottomNav";
 
 export default function AdminSettingsPage() {
@@ -36,6 +36,11 @@ export default function AdminSettingsPage() {
     const [deletingUser, setDeletingUser] = useState(false);
     const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
+    // Bulk selection & delete states
+    const [selectedUserIds, setSelectedUserIds] = useState<Set<string>>(new Set());
+    const [bulkDeleting, setBulkDeleting] = useState(false);
+    const [showBulkDeleteConfirm, setShowBulkDeleteConfirm] = useState(false);
+
     // Administrative reset password states
     const [adminResetPassword, setAdminResetPassword] = useState("");
     const [adminResetForceChange, setAdminResetForceChange] = useState(true);
@@ -46,6 +51,11 @@ export default function AdminSettingsPage() {
     const adminUpdateUser = useMutation(api.users.superAdminUpdateUser);
     const adminDeleteUser = useMutation(api.users.deleteUser);
     const adminResetUserPasswordAction = useAction(api.auth.adminResetUserPassword);
+
+    // Users who can be selected for bulk delete (employees only, never admins or self)
+    const deletableUsers = (allUsers as any[]).filter(
+        (u: any) => u.role === "employee" && u._id !== auth?.id
+    );
 
     const handleAdminResetPasswordSubmit = async () => {
         if (!editingUser || !adminResetPassword.trim() || adminResetPasswordProcessing) return;
@@ -88,6 +98,40 @@ export default function AdminSettingsPage() {
     const handleLogout = () => {
         localStorage.removeItem("heritage_auth");
         router.replace("/login");
+    };
+
+    const toggleSelectUser = (userId: string) => {
+        setSelectedUserIds(prev => {
+            const next = new Set(prev);
+            if (next.has(userId)) next.delete(userId);
+            else next.add(userId);
+            return next;
+        });
+    };
+
+    const selectAllEmployees = () => {
+        const visibleDeletable = filteredUsers.filter(
+            (u: any) => u.role === "employee" && u._id !== auth?.id
+        );
+        setSelectedUserIds(new Set(visibleDeletable.map((u: any) => u._id)));
+    };
+
+    const deselectAll = () => setSelectedUserIds(new Set());
+
+    const handleBulkDelete = async () => {
+        if (selectedUserIds.size === 0 || bulkDeleting) return;
+        setBulkDeleting(true);
+        try {
+            for (const userId of Array.from(selectedUserIds)) {
+                await adminDeleteUser({ userId: userId as any });
+            }
+            setSelectedUserIds(new Set());
+            setShowBulkDeleteConfirm(false);
+        } catch (err: any) {
+            alert(err.message || "Some deletions failed. Please try again.");
+        } finally {
+            setBulkDeleting(false);
+        }
     };
 
 
@@ -367,19 +411,65 @@ export default function AdminSettingsPage() {
                 ) : (
                     <div>
                         {/* Search Bar */}
-                        <div className="input-group" style={{ marginBottom: "var(--spacing-md)" }}>
+                        <div className="input-group" style={{ marginBottom: "var(--spacing-sm)" }}>
                             <div style={{ position: "relative", display: "flex", alignItems: "center" }}>
-                                <input 
-                                    className="input admin" 
+                                <input
+                                    className="input admin"
                                     type="text"
-                                    placeholder="Search by name or email..." 
-                                    value={searchQuery} 
-                                    onChange={(e) => setSearchQuery(e.target.value)} 
+                                    placeholder="Search by name or email..."
+                                    value={searchQuery}
+                                    onChange={(e) => setSearchQuery(e.target.value)}
                                     id="user-search-input"
                                     style={{ paddingLeft: 40 }}
                                 />
                                 <Search size={16} color="var(--color-admin-text-muted)" style={{ position: "absolute", left: 14 }} />
                             </div>
+                        </div>
+
+                        {/* Bulk Action Toolbar */}
+                        <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: "var(--spacing-md)", flexWrap: "wrap" }}>
+                            <button
+                                onClick={selectAllEmployees}
+                                style={{ display: "flex", alignItems: "center", gap: 4, background: "var(--color-admin-surface)", border: "1px solid var(--color-admin-border)", borderRadius: "var(--radius-md)", padding: "6px 12px", fontSize: 12, color: "var(--color-admin-text-muted)", cursor: "pointer" }}
+                                id="select-all-btn"
+                            >
+                                <CheckSquare size={14} /> Select All
+                            </button>
+                            {selectedUserIds.size > 0 && (
+                                <>
+                                    <button
+                                        onClick={deselectAll}
+                                        style={{ display: "flex", alignItems: "center", gap: 4, background: "var(--color-admin-surface)", border: "1px solid var(--color-admin-border)", borderRadius: "var(--radius-md)", padding: "6px 12px", fontSize: 12, color: "var(--color-admin-text-muted)", cursor: "pointer" }}
+                                        id="deselect-all-btn"
+                                    >
+                                        <Square size={14} /> Deselect
+                                    </button>
+                                    <button
+                                        onClick={() => setShowBulkDeleteConfirm(true)}
+                                        style={{ display: "flex", alignItems: "center", gap: 4, background: "#DC262611", border: "1px solid #DC262644", borderRadius: "var(--radius-md)", padding: "6px 12px", fontSize: 12, color: "#DC2626", fontWeight: 700, cursor: "pointer" }}
+                                        id="delete-selected-btn"
+                                    >
+                                        <Trash2 size={14} /> Delete {selectedUserIds.size} Selected
+                                    </button>
+                                </>
+                            )}
+                            {deletableUsers.length > 0 && selectedUserIds.size === 0 && (
+                                <button
+                                    onClick={() => {
+                                        setSelectedUserIds(new Set(deletableUsers.map((u: any) => u._id)));
+                                        setShowBulkDeleteConfirm(true);
+                                    }}
+                                    style={{ display: "flex", alignItems: "center", gap: 4, background: "#DC262608", border: "1px solid #DC262633", borderRadius: "var(--radius-md)", padding: "6px 12px", fontSize: 12, color: "#DC2626", cursor: "pointer" }}
+                                    id="delete-all-employees-btn"
+                                >
+                                    <Trash2 size={14} /> Delete All Employees
+                                </button>
+                            )}
+                            {selectedUserIds.size > 0 && (
+                                <span style={{ fontSize: 12, color: "var(--color-admin-text-muted)", marginLeft: "auto" }}>
+                                    {selectedUserIds.size} of {deletableUsers.length} selected
+                                </span>
+                            )}
                         </div>
 
                         {/* User List */}
@@ -392,26 +482,44 @@ export default function AdminSettingsPage() {
                             ) : (
                                 filteredUsers.map((user: any) => {
                                     const userInitials = `${(user.firstName || user.email?.[0] || "U")[0]}`.toUpperCase();
+                                    const isDeletable = user.role === "employee" && user._id !== auth?.id;
+                                    const isSelected = selectedUserIds.has(user._id);
                                     return (
-                                        <div 
-                                            key={user._id} 
-                                            className="list-item admin" 
-                                            style={{ cursor: "pointer", transition: "background 150ms" }}
+                                        <div
+                                            key={user._id}
+                                            className="list-item admin"
+                                            style={{ cursor: "pointer", transition: "background 150ms", background: isSelected ? "#DC262608" : undefined, borderColor: isSelected ? "#DC262633" : undefined }}
                                             onClick={() => {
-                                                setEditingUser(user);
-                                                setSelectedRole(user.role);
-                                                setEditFirstName(user.firstName || "");
-                                                setEditSurname(user.surname || "");
-                                                setEditEmail(user.email || "");
-                                                setEditGender(user.gender || "other");
-                                                setEditDateOfBirth(user.dateOfBirth || "");
-                                                setShowDeleteConfirm(false);
+                                                if (isDeletable) {
+                                                    toggleSelectUser(user._id);
+                                                } else {
+                                                    setEditingUser(user);
+                                                    setSelectedRole(user.role);
+                                                    setEditFirstName(user.firstName || "");
+                                                    setEditSurname(user.surname || "");
+                                                    setEditEmail(user.email || "");
+                                                    setEditGender(user.gender || "other");
+                                                    setEditDateOfBirth(user.dateOfBirth || "");
+                                                    setShowDeleteConfirm(false);
+                                                }
                                             }}
                                             id={`user-item-${user._id}`}
                                         >
-                                            <div style={{ width: 40, height: 40, borderRadius: "50%", background: user.role === "super_admin" ? "var(--color-primary)" : user.role === "admin" ? "var(--color-secondary)" : "var(--color-admin-border)", display: "flex", alignItems: "center", justifyContent: "center", color: "white", fontWeight: 700, fontSize: 15, flexShrink: 0 }}>
-                                                {userInitials}
-                                            </div>
+                                            {/* Checkbox for deletable users */}
+                                            {isDeletable ? (
+                                                <div style={{ width: 20, height: 20, borderRadius: 4, border: `2px solid ${isSelected ? "#DC2626" : "var(--color-admin-border)"}`, background: isSelected ? "#DC2626" : "transparent", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                                                    {isSelected && <Check size={12} color="white" />}
+                                                </div>
+                                            ) : (
+                                                <div style={{ width: 40, height: 40, borderRadius: "50%", background: user.role === "super_admin" ? "var(--color-primary)" : "var(--color-secondary)", display: "flex", alignItems: "center", justifyContent: "center", color: "white", fontWeight: 700, fontSize: 15, flexShrink: 0 }}>
+                                                    {userInitials}
+                                                </div>
+                                            )}
+                                            {isDeletable && (
+                                                <div style={{ width: 32, height: 32, borderRadius: "50%", background: "var(--color-admin-border)", display: "flex", alignItems: "center", justifyContent: "center", color: "white", fontWeight: 700, fontSize: 13, flexShrink: 0 }}>
+                                                    {userInitials}
+                                                </div>
+                                            )}
                                             <div className="list-item-content">
                                                 <p className="list-item-title admin" style={{ fontWeight: 600 }}>
                                                     {user.firstName ? `${user.firstName} ${user.surname}` : "Profile Incomplete"}
@@ -423,13 +531,18 @@ export default function AdminSettingsPage() {
                                                     </p>
                                                 )}
                                             </div>
-                                            <span className={`badge ${
-                                                user.role === "super_admin" ? "badge-error" : 
-                                                user.role === "admin" ? "badge-warning" : "badge-success"
-                                            }`} style={{ fontSize: 10, padding: "2px 8px" }}>
-                                                {user.role === "super_admin" ? "Super Admin" : 
-                                                 user.role === "admin" ? "Admin" : "Employee"}
-                                            </span>
+                                            <div style={{ display: "flex", alignItems: "center", gap: 6, flexShrink: 0 }}>
+                                                <span className={`badge ${
+                                                    user.role === "super_admin" ? "badge-error" :
+                                                    user.role === "admin" ? "badge-warning" : "badge-success"
+                                                }`} style={{ fontSize: 10, padding: "2px 8px" }}>
+                                                    {user.role === "super_admin" ? "Super Admin" :
+                                                     user.role === "admin" ? "Admin" : "Employee"}
+                                                </span>
+                                                {!isDeletable && (
+                                                    <ChevronRight size={14} color="var(--color-admin-text-muted)" />
+                                                )}
+                                            </div>
                                         </div>
                                     );
                                 })
@@ -439,7 +552,45 @@ export default function AdminSettingsPage() {
                 )}
             </main>
 
-            {/* Confirm modal */}
+            {/* Bulk Delete Confirm Modal */}
+            {showBulkDeleteConfirm && (
+                <div className="modal-overlay" onClick={() => { if (!bulkDeleting) { setShowBulkDeleteConfirm(false); setSelectedUserIds(new Set()); } }}>
+                    <div className="modal-sheet admin" onClick={(e) => e.stopPropagation()} style={{ textAlign: "center" }}>
+                        <div className="modal-handle" style={{ background: "var(--color-admin-border)" }} />
+                        <div style={{ width: 56, height: 56, borderRadius: "50%", background: "#DC262622", display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto var(--spacing-md)" }}>
+                            <Trash2 size={24} color="#DC2626" />
+                        </div>
+                        <h2 className="modal-title admin">Delete {selectedUserIds.size} User{selectedUserIds.size !== 1 ? "s" : ""}?</h2>
+                        <p style={{ fontSize: 14, color: "var(--color-admin-text-muted)", marginBottom: "var(--spacing-sm)", lineHeight: 1.6 }}>
+                            This will permanently delete <strong style={{ color: "var(--color-admin-text)" }}>{selectedUserIds.size} employee account{selectedUserIds.size !== 1 ? "s" : ""}</strong> and all their associated data. This cannot be undone.
+                        </p>
+                        <div style={{ background: "#DC262611", border: "1px solid #DC262633", borderRadius: "var(--radius-md)", padding: "10px 14px", marginBottom: "var(--spacing-lg)", textAlign: "left" }}>
+                            <p style={{ fontSize: 12, color: "#DC2626", fontWeight: 600 }}>⚠️ Admin accounts are never deleted</p>
+                            <p style={{ fontSize: 12, color: "var(--color-admin-text-muted)", marginTop: 3 }}>Only employee-role users are included in this action.</p>
+                        </div>
+                        <div style={{ display: "flex", gap: "var(--spacing-sm)" }}>
+                            <button
+                                onClick={() => { setShowBulkDeleteConfirm(false); setSelectedUserIds(new Set()); }}
+                                disabled={bulkDeleting}
+                                style={{ flex: 1, background: "var(--color-admin-card)", color: "var(--color-admin-text)", border: "1px solid var(--color-admin-border)", borderRadius: "var(--radius-lg)", padding: "12px", fontWeight: 600, cursor: "pointer" }}
+                                id="cancel-bulk-delete-btn"
+                            >
+                                Cancel
+                            </button>
+                            <button
+                                onClick={handleBulkDelete}
+                                disabled={bulkDeleting}
+                                style={{ flex: 1, background: "#DC2626", color: "white", border: "none", borderRadius: "var(--radius-lg)", padding: "12px", fontWeight: 700, cursor: "pointer" }}
+                                id="confirm-bulk-delete-btn"
+                            >
+                                {bulkDeleting ? "Deleting…" : `Delete ${selectedUserIds.size}`}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Logout Confirm modal */}
             {showLogoutConfirm && (
                 <div className="modal-overlay" onClick={() => setShowLogoutConfirm(false)}>
                     <div className="modal-sheet admin" onClick={(e) => e.stopPropagation()} style={{ textAlign: "center" }}>
