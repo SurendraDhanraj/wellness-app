@@ -33,6 +33,7 @@ export default function AdminSettingsPage() {
     const [editEmail, setEditEmail] = useState("");
     const [editGender, setEditGender] = useState<"male" | "female" | "other">("other");
     const [editDateOfBirth, setEditDateOfBirth] = useState("");
+    const [editBusinessUnitId, setEditBusinessUnitId] = useState<string>("");
     const [deletingUser, setDeletingUser] = useState(false);
     const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
@@ -48,6 +49,7 @@ export default function AdminSettingsPage() {
 
     const batchInvite = useAction(api.auth.batchInviteEmployees);
     const allUsers = useQuery(api.users.getAllUsers) || [];
+    const businessUnits = useQuery(api.config.getBusinessUnits) || [];
     const adminUpdateUser = useMutation(api.users.superAdminUpdateUser);
     const adminDeleteUser = useMutation(api.users.deleteUser);
     const adminResetUserPasswordAction = useAction(api.auth.adminResetUserPassword);
@@ -301,6 +303,7 @@ export default function AdminSettingsPage() {
                 gender: editGender || undefined,
                 dateOfBirth: editDateOfBirth.trim() || undefined,
                 role: selectedRole,
+                businessUnitId: editBusinessUnitId as any || undefined,
             });
             setEditingUser(null);
             alert("User updated successfully!");
@@ -494,6 +497,7 @@ export default function AdminSettingsPage() {
                                         setEditEmail(user.email || "");
                                         setEditGender(user.gender || "other");
                                         setEditDateOfBirth(user.dateOfBirth || "");
+                                        setEditBusinessUnitId(user.businessUnitId || "");
                                         setShowDeleteConfirm(false);
                                     };
 
@@ -526,6 +530,11 @@ export default function AdminSettingsPage() {
                                                 {user.dateOfBirth && (
                                                     <p style={{ fontSize: 11, color: "var(--color-admin-text-muted)", marginTop: 2 }}>
                                                         DOB: {formatDateDisplay(user.dateOfBirth)}
+                                                    </p>
+                                                )}
+                                                {user.businessUnitId && (
+                                                    <p style={{ fontSize: 11, color: "var(--color-admin-text-muted)", marginTop: 2 }}>
+                                                        🏢 {(businessUnits as any[]).find((bu: any) => bu._id === user.businessUnitId)?.name || "Unknown BU"}
                                                     </p>
                                                 )}
                                             </div>
@@ -806,6 +815,22 @@ export default function AdminSettingsPage() {
                                             📅 {formatDateDisplay(editDateOfBirth)}
                                         </p>
                                     )}
+                                </div>
+
+                                <div className="input-group">
+                                    <label className="input-label admin">Business Unit</label>
+                                    <select
+                                        className="input admin"
+                                        value={editBusinessUnitId}
+                                        onChange={(e) => setEditBusinessUnitId(e.target.value)}
+                                        id="edit-user-business-unit"
+                                        style={{ cursor: "pointer" }}
+                                    >
+                                        <option value="">— None —</option>
+                                        {(businessUnits as any[]).filter((bu: any) => bu.isActive).map((bu: any) => (
+                                            <option key={bu._id} value={bu._id}>{bu.name}</option>
+                                        ))}
+                                    </select>
                                 </div>
 
                                 <div className="input-group">

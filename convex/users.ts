@@ -121,6 +121,7 @@ export const superAdminUpdateUser = mutation({
         gender: v.optional(v.union(v.literal("male"), v.literal("female"), v.literal("other"))),
         dateOfBirth: v.optional(v.string()),
         role: v.union(v.literal("super_admin"), v.literal("admin"), v.literal("employee")),
+        businessUnitId: v.optional(v.id("businessUnits")),
     },
     handler: async (ctx, args) => {
         const { userId, ...data } = args;
