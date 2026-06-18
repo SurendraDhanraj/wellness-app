@@ -90,6 +90,43 @@ export default function AdminSettingsPage() {
         router.replace("/login");
     };
 
+
+    // Normalize any common date format to YYYY-MM-DD
+    const normalizeDate = (raw: string): string => {
+        if (!raw || !raw.trim()) return "";
+        const s = raw.trim();
+
+        // Already ISO: YYYY-MM-DD
+        if (/^\d{4}-\d{2}-\d{2}$/.test(s)) return s;
+
+        // YYYY/MM/DD
+        if (/^\d{4}\/\d{2}\/\d{2}$/.test(s)) return s.replace(/\//g, "-");
+
+        // DD/MM/YYYY or DD-MM-YYYY (most common in TT)
+        const dmySlash = s.match(/^(\d{1,2})[\/-](\d{1,2})[\/-](\d{4})$/);
+        if (dmySlash) {
+            const [, d, m, y] = dmySlash;
+            return `${y}-${m.padStart(2, "0")}-${d.padStart(2, "0")}`;
+        }
+
+        // Try native Date as last resort (handles "08 Aug 1977" etc)
+        const fallback = new Date(s);
+        if (!isNaN(fallback.getTime())) {
+            return fallback.toISOString().split("T")[0];
+        }
+
+        return s; // return as-is if all else fails
+    };
+
+    // Safely format a stored dateOfBirth string for display
+    const formatDateDisplay = (dob: string): string => {
+        if (!dob) return "";
+        const iso = normalizeDate(dob);
+        const d = new Date(iso + "T00:00:00");
+        if (isNaN(d.getTime())) return dob; // show raw if still unparseable
+        return d.toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" });
+    };
+
     const parseCSV = (text: string) => {
         const lines = text.split(/\r?\n/);
         const parsed: any[] = [];
@@ -120,7 +157,7 @@ export default function AdminSettingsPage() {
                 surname,
                 firstName,
                 gender,
-                dateOfBirth,
+                dateOfBirth: normalizeDate(dateOfBirth),
                 email,
             });
         }
@@ -382,7 +419,7 @@ export default function AdminSettingsPage() {
                                                 <p className="list-item-subtitle admin" style={{ fontSize: 12, color: "var(--color-admin-text-muted)" }}>{user.email}</p>
                                                 {user.dateOfBirth && (
                                                     <p style={{ fontSize: 11, color: "var(--color-admin-text-muted)", marginTop: 2 }}>
-                                                        DOB: {new Date(user.dateOfBirth + "T00:00:00").toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" })}
+                                                        DOB: {formatDateDisplay(user.dateOfBirth)}
                                                     </p>
                                                 )}
                                             </div>
@@ -616,10 +653,10 @@ export default function AdminSettingsPage() {
 
                                 <div className="input-group">
                                     <label className="input-label admin">Date of Birth</label>
-                                    <input className="input admin" type="date" value={editDateOfBirth} onChange={(e) => setEditDateOfBirth(e.target.value)} id="edit-user-dob" />
+                                    <input className="input admin" type="date" value={normalizeDate(editDateOfBirth)} onChange={(e) => setEditDateOfBirth(e.target.value)} id="edit-user-dob" />
                                     {editDateOfBirth && (
                                         <p style={{ fontSize: 12, color: "var(--color-admin-text-muted)", marginTop: 4 }}>
-                                            📅 {new Date(editDateOfBirth + "T00:00:00").toLocaleDateString("en-GB", { day: "2-digit", month: "long", year: "numeric" })}
+                                            📅 {formatDateDisplay(editDateOfBirth)}
                                         </p>
                                     )}
                                 </div>
