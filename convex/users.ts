@@ -36,6 +36,7 @@ export const createUser = mutation({
         surname: v.optional(v.string()),
         gender: v.optional(v.union(v.literal("male"), v.literal("female"), v.literal("other"))),
         dateOfBirth: v.optional(v.string()),
+        businessUnitId: v.optional(v.id("businessUnits")),
     },
     handler: async (ctx, args) => {
         return await ctx.db.insert("users", args);

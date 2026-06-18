@@ -116,6 +116,7 @@ export const batchInviteEmployees = action({
                 surname: v.optional(v.string()),
                 gender: v.optional(v.union(v.literal("male"), v.literal("female"), v.literal("other"))),
                 dateOfBirth: v.optional(v.string()),
+                businessUnit: v.optional(v.string()),
             })
         ),
     },
@@ -126,6 +127,9 @@ export const batchInviteEmployees = action({
         if (!admin || (admin.role !== "admin" && admin.role !== "super_admin")) {
             return { success: false, error: "Unauthorized" };
         }
+
+        // Fetch all business units once for name matching
+        const allBusinessUnits = await ctx.runQuery(api.config.getBusinessUnits, {});
 
         const results = [];
         for (const emp of args.employees) {
@@ -140,6 +144,15 @@ export const batchInviteEmployees = action({
                     error: "Email already registered",
                 });
                 continue;
+            }
+
+            // Resolve business unit name → ID (case-insensitive)
+            let businessUnitId: any = undefined;
+            if (emp.businessUnit?.trim()) {
+                const match = (allBusinessUnits as any[]).find(
+                    (bu: any) => bu.name.toLowerCase() === emp.businessUnit!.trim().toLowerCase()
+                );
+                businessUnitId = match?._id;
             }
 
             // Create employee with clean 6-char alpha-numeric uppercase temporary password
@@ -158,6 +171,7 @@ export const batchInviteEmployees = action({
                 surname: emp.surname?.trim() || undefined,
                 gender: emp.gender || undefined,
                 dateOfBirth: emp.dateOfBirth?.trim() || undefined,
+                businessUnitId,
             });
 
             results.push({

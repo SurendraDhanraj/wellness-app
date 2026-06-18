@@ -190,7 +190,7 @@ export default function AdminSettingsPage() {
             const parts = line.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/).map(p => p.trim().replace(/^"|"$/g, ''));
             if (parts.length < 5) continue;
 
-            const [surname, firstName, genderRaw, dateOfBirth, email] = parts;
+            const [surname, firstName, genderRaw, dateOfBirth, email, businessUnitRaw] = parts;
             
             let gender: "male" | "female" | "other" = "other";
             const gLow = genderRaw.toLowerCase();
@@ -203,6 +203,7 @@ export default function AdminSettingsPage() {
                 gender,
                 dateOfBirth: normalizeDate(dateOfBirth),
                 email,
+                businessUnit: businessUnitRaw?.trim() || undefined,
             });
         }
         return parsed;
@@ -632,7 +633,7 @@ export default function AdminSettingsPage() {
                                     Upload a CSV file containing employee details. The CSV should have the following column structure (the first row is skipped if it contains headers):
                                 </p>
                                 <div style={{ background: "var(--color-admin-bg)", padding: "10px var(--spacing-sm)", borderRadius: "var(--radius-sm)", fontSize: 12, fontFamily: "monospace", color: "var(--color-primary)", border: "1px solid var(--color-admin-border)", marginBottom: "var(--spacing-md)", overflowX: "auto" }}>
-                                    Surname, Firstname, gender, date of birth, email
+                                    Surname, Firstname, gender, date of birth, email, business unit (optional)
                                 </div>
 
                                 <div className="input-group">
