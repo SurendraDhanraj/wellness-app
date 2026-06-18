@@ -380,6 +380,11 @@ export default function AdminSettingsPage() {
                                                     {user.firstName ? `${user.firstName} ${user.surname}` : "Profile Incomplete"}
                                                 </p>
                                                 <p className="list-item-subtitle admin" style={{ fontSize: 12, color: "var(--color-admin-text-muted)" }}>{user.email}</p>
+                                                {user.dateOfBirth && (
+                                                    <p style={{ fontSize: 11, color: "var(--color-admin-text-muted)", marginTop: 2 }}>
+                                                        DOB: {new Date(user.dateOfBirth + "T00:00:00").toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" })}
+                                                    </p>
+                                                )}
                                             </div>
                                             <span className={`badge ${
                                                 user.role === "super_admin" ? "badge-error" : 
@@ -612,6 +617,11 @@ export default function AdminSettingsPage() {
                                 <div className="input-group">
                                     <label className="input-label admin">Date of Birth</label>
                                     <input className="input admin" type="date" value={editDateOfBirth} onChange={(e) => setEditDateOfBirth(e.target.value)} id="edit-user-dob" />
+                                    {editDateOfBirth && (
+                                        <p style={{ fontSize: 12, color: "var(--color-admin-text-muted)", marginTop: 4 }}>
+                                            📅 {new Date(editDateOfBirth + "T00:00:00").toLocaleDateString("en-GB", { day: "2-digit", month: "long", year: "numeric" })}
+                                        </p>
+                                    )}
                                 </div>
 
                                 <div className="input-group">
