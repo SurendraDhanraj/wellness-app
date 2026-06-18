@@ -484,42 +484,39 @@ export default function AdminSettingsPage() {
                                     const userInitials = `${(user.firstName || user.email?.[0] || "U")[0]}`.toUpperCase();
                                     const isDeletable = user.role === "employee" && user._id !== auth?.id;
                                     const isSelected = selectedUserIds.has(user._id);
+
+                                    const openEditModal = () => {
+                                        setEditingUser(user);
+                                        setSelectedRole(user.role);
+                                        setEditFirstName(user.firstName || "");
+                                        setEditSurname(user.surname || "");
+                                        setEditEmail(user.email || "");
+                                        setEditGender(user.gender || "other");
+                                        setEditDateOfBirth(user.dateOfBirth || "");
+                                        setShowDeleteConfirm(false);
+                                    };
+
                                     return (
                                         <div
                                             key={user._id}
                                             className="list-item admin"
                                             style={{ cursor: "pointer", transition: "background 150ms", background: isSelected ? "#DC262608" : undefined, borderColor: isSelected ? "#DC262633" : undefined }}
-                                            onClick={() => {
-                                                if (isDeletable) {
-                                                    toggleSelectUser(user._id);
-                                                } else {
-                                                    setEditingUser(user);
-                                                    setSelectedRole(user.role);
-                                                    setEditFirstName(user.firstName || "");
-                                                    setEditSurname(user.surname || "");
-                                                    setEditEmail(user.email || "");
-                                                    setEditGender(user.gender || "other");
-                                                    setEditDateOfBirth(user.dateOfBirth || "");
-                                                    setShowDeleteConfirm(false);
-                                                }
-                                            }}
+                                            onClick={openEditModal}
                                             id={`user-item-${user._id}`}
                                         >
-                                            {/* Checkbox for deletable users */}
-                                            {isDeletable ? (
-                                                <div style={{ width: 20, height: 20, borderRadius: 4, border: `2px solid ${isSelected ? "#DC2626" : "var(--color-admin-border)"}`, background: isSelected ? "#DC2626" : "transparent", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                                            {/* Checkbox — tapping it toggles selection WITHOUT opening the modal */}
+                                            {isDeletable && (
+                                                <div
+                                                    onClick={(e) => { e.stopPropagation(); toggleSelectUser(user._id); }}
+                                                    style={{ width: 22, height: 22, borderRadius: 4, border: `2px solid ${isSelected ? "#DC2626" : "var(--color-admin-border)"}`, background: isSelected ? "#DC2626" : "transparent", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, cursor: "pointer" }}
+                                                >
                                                     {isSelected && <Check size={12} color="white" />}
                                                 </div>
-                                            ) : (
-                                                <div style={{ width: 40, height: 40, borderRadius: "50%", background: user.role === "super_admin" ? "var(--color-primary)" : "var(--color-secondary)", display: "flex", alignItems: "center", justifyContent: "center", color: "white", fontWeight: 700, fontSize: 15, flexShrink: 0 }}>
-                                                    {userInitials}
-                                                </div>
                                             )}
-                                            {isDeletable && (
-                                                <div style={{ width: 32, height: 32, borderRadius: "50%", background: "var(--color-admin-border)", display: "flex", alignItems: "center", justifyContent: "center", color: "white", fontWeight: 700, fontSize: 13, flexShrink: 0 }}>
-                                                    {userInitials}
-                                                </div>
-                                            )}
+                                            {/* Avatar */}
+                                            <div style={{ width: 36, height: 36, borderRadius: "50%", background: user.role === "super_admin" ? "var(--color-primary)" : user.role === "admin" ? "var(--color-secondary)" : "var(--color-admin-border)", display: "flex", alignItems: "center", justifyContent: "center", color: "white", fontWeight: 700, fontSize: 13, flexShrink: 0 }}>
+                                                {userInitials}
+                                            </div>
                                             <div className="list-item-content">
                                                 <p className="list-item-title admin" style={{ fontWeight: 600 }}>
                                                     {user.firstName ? `${user.firstName} ${user.surname}` : "Profile Incomplete"}
@@ -539,9 +536,7 @@ export default function AdminSettingsPage() {
                                                     {user.role === "super_admin" ? "Super Admin" :
                                                      user.role === "admin" ? "Admin" : "Employee"}
                                                 </span>
-                                                {!isDeletable && (
-                                                    <ChevronRight size={14} color="var(--color-admin-text-muted)" />
-                                                )}
+                                                <ChevronRight size={14} color="var(--color-admin-text-muted)" />
                                             </div>
                                         </div>
                                     );
