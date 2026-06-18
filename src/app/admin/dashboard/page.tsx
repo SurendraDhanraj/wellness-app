@@ -43,7 +43,7 @@ export default function AdminDashboardPage() {
     const avgCompletion = employees.length > 0 ? Math.round((employees.filter((e: any) => e.isProfileComplete).length / employees.length) * 100) : 0;
 
     const deptData = departments.slice(0, 8).map((d: any) => employees.filter((e: any) => e.departmentId === d._id).length);
-    const buData = businessUnits.slice(0, 8).map((b: any) => employees.filter((e: any) => e.businessUnitId === b._id).length);
+    const buData = (businessUnits as any[]).map((b: any) => employees.filter((e: any) => e.businessUnitId === b._id).length);
     const locationData = locations.slice(0, 8).map((l: any) => employees.filter((e: any) => e.locationId === l._id).length);
 
     const makeBarData = (labels: string[], data: number[], color: string) => ({
@@ -51,7 +51,7 @@ export default function AdminDashboardPage() {
         datasets: [{ data, backgroundColor: `${color}55`, hoverBackgroundColor: color, borderRadius: 8, borderSkipped: false }]
     });
     const barData = makeBarData(departments.slice(0, 8).map((d: any) => d.name.slice(0, 7)), deptData, "#C0244C");
-    const buBarData = makeBarData(businessUnits.slice(0, 12).map((b: any) => b.name), buData, "#7C3AED");
+    const buBarData = makeBarData((businessUnits as any[]).map((b: any) => b.name), buData, "#7C3AED");
     const locationBarData = makeBarData(locations.slice(0, 8).map((l: any) => l.name.slice(0, 7)), locationData, "#0891B2");
 
     const barOptions = {
@@ -74,7 +74,7 @@ export default function AdminDashboardPage() {
         }
     };
 
-    const buChartHeight = Math.max(140, (businessUnits as any[]).length * 34 + 40);
+    const buChartHeight = Math.max(180, (businessUnits as any[]).length * 38 + 48);
 
     // Build last-7-days submission counts from real data
     const last7Days = Array.from({ length: 7 }, (_, i) => {
