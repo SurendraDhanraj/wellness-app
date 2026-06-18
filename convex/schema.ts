@@ -195,4 +195,22 @@ export default defineSchema({
   })
     .index("by_token", ["token"])
     .index("by_user", ["userId"]),
+
+  passwordResetRequests: defineTable({
+    userId: v.id("users"),
+    email: v.string(),
+    firstName: v.optional(v.string()),
+    surname: v.optional(v.string()),
+    requestedAt: v.number(),
+    status: v.union(
+      v.literal("pending"),
+      v.literal("fulfilled"),
+      v.literal("dismissed")
+    ),
+    fulfilledBy: v.optional(v.id("users")),
+    fulfilledAt: v.optional(v.number()),
+    note: v.optional(v.string()),
+  })
+    .index("by_status", ["status"])
+    .index("by_user", ["userId"]),
 });

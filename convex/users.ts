@@ -250,3 +250,72 @@ export const completeUserPasswordReset = mutation({
         });
     },
 });
+
+// ── Password Reset Requests (admin-mediated flow) ────────────────────────────
+
+export const createPasswordResetRequest = mutation({
+    args: { userId: v.id("users"), email: v.string(), firstName: v.optional(v.string()), surname: v.optional(v.string()) },
+    handler: async (ctx, args) => {
+        // Deduplicate: cancel any existing pending request for this user
+        const existing = await ctx.db
+            .query("passwordResetRequests")
+            .withIndex("by_user", (q) => q.eq("userId", args.userId))
+            .filter((q) => q.eq(q.field("status"), "pending"))
+            .first();
+        if (existing) return existing._id; // already has one pending, no need to duplicate
+
+        return await ctx.db.insert("passwordResetRequests", {
+            userId: args.userId,
+            email: args.email,
+            firstName: args.firstName,
+            surname: args.surname,
+            requestedAt: Date.now(),
+            status: "pending",
+        });
+    },
+});
+
+export const getPendingPasswordResetRequests = query({
+    args: {},
+    handler: async (ctx) => {
+        return await ctx.db
+            .query("passwordResetRequests")
+            .withIndex("by_status", (q) => q.eq("status", "pending"))
+            .order("asc")
+            .collect();
+    },
+});
+
+export const getAllPasswordResetRequests = query({
+    args: {},
+    handler: async (ctx) => {
+        return await ctx.db
+            .query("passwordResetRequests")
+            .order("desc")
+            .collect();
+    },
+});
+
+export const fulfillPasswordResetRequest = mutation({
+    args: { requestId: v.id("passwordResetRequests"), adminUserId: v.id("users"), note: v.optional(v.string()) },
+    handler: async (ctx, args) => {
+        await ctx.db.patch(args.requestId, {
+            status: "fulfilled",
+            fulfilledBy: args.adminUserId,
+            fulfilledAt: Date.now(),
+            note: args.note,
+        });
+    },
+});
+
+export const dismissPasswordResetRequest = mutation({
+    args: { requestId: v.id("passwordResetRequests"), adminUserId: v.id("users") },
+    handler: async (ctx, args) => {
+        await ctx.db.patch(args.requestId, {
+            status: "dismissed",
+            fulfilledBy: args.adminUserId,
+            fulfilledAt: Date.now(),
+        });
+    },
+});
+

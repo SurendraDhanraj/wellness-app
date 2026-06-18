@@ -207,32 +207,27 @@ export const requestPasswordRecovery = action({
     handler: async (ctx, args): Promise<any> => {
         const cleanEmail = args.email.trim().toLowerCase();
         const user = await ctx.runQuery(api.users.getUserByEmail, { email: cleanEmail });
+
+        // Always return success to prevent email enumeration
         if (!user) {
-            return { success: true, message: "If this email is registered, a recovery code has been sent." };
+            return { success: true, message: "If this email is registered, your request has been submitted." };
         }
 
-        // Generate 6-digit code
-        const code = Math.floor(100000 + Math.random() * 900000).toString();
-        const expiresAt = Date.now() + 10 * 60 * 1000; // 10 minutes
+        if (!user.isActive) {
+            return { success: true, message: "If this email is registered, your request has been submitted." };
+        }
 
-        await ctx.runMutation(api.users.setUserRecoveryCode, {
+        // Store the request in the DB for admin review
+        await ctx.runMutation(api.users.createPasswordResetRequest, {
             userId: user._id,
-            recoveryCode: code,
-            recoveryCodeExpires: expiresAt,
+            email: cleanEmail,
+            firstName: user.firstName,
+            surname: user.surname,
         });
 
-        // Log clearly to the developer console/terminal so the user can easily copy it in local dev!
-        console.log("\n==============================================");
-        console.log("  [MOCK EMAIL SERVICE] Password Recovery Code");
-        console.log(`  To: ${cleanEmail}`);
-        console.log(`  Verification Code: ${code}`);
-        console.log("  Expires in: 10 minutes");
-        console.log("==============================================\n");
-
-        return { 
-            success: true, 
-            message: "A 6-digit verification code has been generated. Check developer server logs to retrieve it.",
-            debugCode: code
+        return {
+            success: true,
+            message: "Your request has been submitted. An administrator will reset your password and contact you shortly.",
         };
     },
 });

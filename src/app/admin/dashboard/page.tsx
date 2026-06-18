@@ -3,7 +3,7 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useQuery } from "convex/react";
 import { api } from "../../../../convex/_generated/api";
-import { Bell, Users, ClipboardCheck, BarChart2, Trophy, Scale, Footprints } from "lucide-react";
+import { Bell, Users, ClipboardCheck, BarChart2, Trophy, Scale, Footprints, KeyRound } from "lucide-react";
 import { AdminBottomNav } from "@/components/BottomNav";
 import { Bar, Line } from "react-chartjs-2";
 import { Chart as ChartJS, CategoryScale, LinearScale, BarElement, LineElement, PointElement, Filler, Tooltip, Legend } from "chart.js";
@@ -30,6 +30,7 @@ export default function AdminDashboardPage() {
 
     const employees = useQuery(api.users.getAllEmployees) || [];
     const pending = useQuery(api.activities.getPendingVerifications) || [];
+    const pendingResets = useQuery(api.users.getPendingPasswordResetRequests) || [];
     const departments = useQuery(api.config.getDepartments) || [];
     const businessUnits = useQuery(api.config.getBusinessUnits) || [];
     const locations = useQuery(api.config.getLocations) || [];
@@ -143,6 +144,29 @@ export default function AdminDashboardPage() {
                         <span className="kpi-trend up" style={{ fontSize: 11 }}>Profiles complete</span>
                     </div>
                 </div>
+
+                {/* Password Reset Requests Alert */}
+                {pendingResets.length > 0 && (
+                    <div
+                        className="card admin"
+                        style={{ marginBottom: "var(--spacing-sm)", cursor: "pointer", border: "1px solid var(--color-warning)55", background: "var(--color-warning)0a" }}
+                        onClick={() => router.push("/admin/manage")}
+                        id="pending-resets-card"
+                    >
+                        <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+                            <div style={{ width: 44, height: 44, borderRadius: "50%", background: "var(--color-warning)22", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                                <KeyRound size={20} color="var(--color-warning)" />
+                            </div>
+                            <div style={{ flex: 1 }}>
+                                <p style={{ fontWeight: 700, color: "var(--color-admin-text)", fontSize: 14 }}>
+                                    {pendingResets.length} Password Reset Request{pendingResets.length !== 1 ? "s" : ""}
+                                </p>
+                                <p style={{ fontSize: 12, color: "var(--color-admin-text-muted)", marginTop: 2 }}>Tap to review and action → Manage</p>
+                            </div>
+                            <span style={{ fontSize: 22, fontWeight: 800, color: "var(--color-warning)" }}>{pendingResets.length}</span>
+                        </div>
+                    </div>
+                )}
 
                 {/* Dept chart */}
                 <div className="card admin" style={{ marginBottom: "var(--spacing-sm)" }}>
