@@ -155,8 +155,8 @@ export const batchInviteEmployees = action({
                 businessUnitId = match?._id;
             }
 
-            // Create employee with clean 6-char alpha-numeric uppercase temporary password
-            const tempPassword = crypto.randomBytes(3).toString("hex").toUpperCase();
+            // Default temporary password — user must change on first login
+            const tempPassword = "Password1";
             const hash = hashPassword(tempPassword);
             await ctx.runMutation(api.users.createUser, {
                 email: trimmedEmail,
