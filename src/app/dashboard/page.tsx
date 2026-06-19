@@ -139,15 +139,17 @@ export default function DashboardPage() {
                     </div>
 
                     {!latestMetric && (
-                        <div className="card" style={{ textAlign: "center", padding: "var(--spacing-md)", marginBottom: "var(--spacing-md)", border: "1.5px dashed var(--color-border)" }}>
-                            <p style={{ fontSize: 13, color: "var(--color-text-secondary)", marginBottom: 8 }}>No health data logged yet.</p>
+                        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, background: "linear-gradient(135deg, var(--color-primary-light, #fce8ed) 0%, var(--color-surface) 100%)", borderRadius: "var(--radius-lg)", padding: "14px 16px", marginBottom: "var(--spacing-md)" }}>
+                            <div>
+                                <p style={{ fontSize: 13, fontWeight: 700, color: "var(--color-primary)", marginBottom: 2 }}>Track your health</p>
+                                <p style={{ fontSize: 12, color: "var(--color-text-secondary)" }}>No data logged yet — start today!</p>
+                            </div>
                             <button
-                                className="btn-primary"
-                                style={{ fontSize: 13, padding: "8px 20px" }}
                                 onClick={() => router.push("/health")}
                                 id="log-health-cta"
+                                style={{ flexShrink: 0, background: "var(--color-primary)", color: "white", border: "none", borderRadius: 999, padding: "8px 16px", fontSize: 12, fontWeight: 700, cursor: "pointer", whiteSpace: "nowrap" }}
                             >
-                                + Log today's data
+                                + Log data
                             </button>
                         </div>
                     )}
