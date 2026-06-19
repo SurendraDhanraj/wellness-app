@@ -11,7 +11,7 @@ export default defineSchema({
     dateOfBirth: v.optional(v.string()),
     gender: v.optional(v.union(v.literal("male"), v.literal("female"), v.literal("other"))),
     height: v.optional(v.number()),
-    heightUnit: v.optional(v.union(v.literal("cm"), v.literal("ft"))),
+    heightUnit: v.optional(v.union(v.literal("cm"), v.literal("ft"), v.literal("in"))),
     businessUnitId: v.optional(v.id("businessUnits")),
     departmentId: v.optional(v.id("departments")),
     locationId: v.optional(v.id("locations")),

@@ -70,7 +70,7 @@ export const updateUserProfile = mutation({
         dateOfBirth: v.string(),
         gender: v.union(v.literal("male"), v.literal("female"), v.literal("other")),
         height: v.number(),
-        heightUnit: v.union(v.literal("cm"), v.literal("ft")),
+        heightUnit: v.union(v.literal("cm"), v.literal("ft"), v.literal("in")),
         businessUnitId: v.id("businessUnits"),
         departmentId: v.id("departments"),
         locationId: v.id("locations"),
