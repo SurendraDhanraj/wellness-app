@@ -150,8 +150,10 @@ export default function AdminDashboardPage() {
                 <div className="card-grid-2" style={{ marginBottom: "var(--spacing-sm)" }}>
                     <div className="card admin" style={{ cursor: "pointer" }} onClick={() => router.push("/admin/verify")}>
                         <p className="kpi-label admin">Pending</p>
-                        <p className="kpi-value admin" style={{ fontSize: 32 }}>{pending.length}</p>
-                        <p style={{ fontSize: 12, color: "var(--color-admin-text-muted)" }}>Verifications</p>
+                        <p className="kpi-value admin" style={{ fontSize: 32 }}>{pending.length + pendingResets.length}</p>
+                        <p style={{ fontSize: 11, color: "var(--color-admin-text-muted)", marginTop: 2 }}>
+                            {pending.length} verification{pending.length !== 1 ? "s" : ""} · {pendingResets.length} reset{pendingResets.length !== 1 ? "s" : ""}
+                        </p>
                         <ClipboardCheck size={22} color="var(--color-warning)" style={{ marginTop: 4 }} />
                     </div>
                     <div className="card admin">
