@@ -32,6 +32,12 @@ export default function DashboardPage() {
     const rankIndex = leaderboard.findIndex((u: any) => u._id === auth?.id);
     const displayRank = rankIndex >= 0 ? rankIndex + 1 : null;
 
+    // Points earned this week from verified enrollments
+    const oneWeekAgo = Date.now() - 7 * 24 * 60 * 60 * 1000;
+    const weeklyPoints = enrollments
+        .filter((e: any) => e.status === "verified" && e.verifiedAt && e.verifiedAt >= oneWeekAgo)
+        .reduce((sum: number, e: any) => sum + (e.activity?.points ?? 0), 0);
+
     if (!auth) return <div className="app-container" style={{ display: "flex", alignItems: "center", justifyContent: "center", minHeight: "100dvh" }}><div className="animate-spin" style={{ width: 32, height: 32, border: "3px solid var(--color-primary-light)", borderTopColor: "var(--color-primary)", borderRadius: "50%" }} /></div>;
 
     const latestMetric = metrics[0];
@@ -106,9 +112,11 @@ export default function DashboardPage() {
                             <span style={{ fontSize: 12, opacity: 0.8 }}>Total Points</span>
                         </div>
                         <p style={{ fontSize: 32, fontWeight: 800, lineHeight: 1 }}>{totalPoints}</p>
-                        <div style={{ marginTop: 6, display: "inline-flex", alignItems: "center", gap: 4, background: "rgba(255,255,255,0.2)", padding: "2px 8px", borderRadius: 999, fontSize: 11, fontWeight: 600 }}>
-                            ↑ +150 this week
-                        </div>
+                        {weeklyPoints > 0 && (
+                            <div style={{ marginTop: 6, display: "inline-flex", alignItems: "center", gap: 4, background: "rgba(255,255,255,0.2)", padding: "2px 8px", borderRadius: 999, fontSize: 11, fontWeight: 600 }}>
+                                ↑ +{weeklyPoints} this week
+                            </div>
+                        )}
                     </div>
                     <div className="card">
                         <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 4 }}>
