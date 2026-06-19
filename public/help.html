@@ -1,0 +1,635 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Heritage Wellness App – User Guide</title>
+<style>
+  /* ── Reset & Base ── */
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  html { font-size: 15px; }
+  body {
+    font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+    color: #1a1a2e;
+    background: #fff;
+    line-height: 1.65;
+    padding: 0;
+  }
+
+  /* ── Cover Page ── */
+  .cover {
+    min-height: 100vh;
+    background: linear-gradient(135deg, #C0244C 0%, #8B1535 60%, #1a1a2e 100%);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    padding: 60px 40px;
+    page-break-after: always;
+  }
+  .cover-logo {
+    width: 80px; height: 80px;
+    background: rgba(255,255,255,0.15);
+    border-radius: 24px;
+    display: flex; align-items: center; justify-content: center;
+    margin: 0 auto 32px;
+    font-size: 40px;
+  }
+  .cover h1 { font-size: 2.6rem; font-weight: 800; color: #fff; margin-bottom: 12px; letter-spacing: -0.5px; }
+  .cover .subtitle { font-size: 1.1rem; color: rgba(255,255,255,0.75); margin-bottom: 40px; }
+  .cover-meta { display: flex; gap: 32px; justify-content: center; flex-wrap: wrap; }
+  .cover-meta span { background: rgba(255,255,255,0.12); color: rgba(255,255,255,0.9); border-radius: 8px; padding: 8px 20px; font-size: 13px; font-weight: 600; }
+
+  /* ── TOC ── */
+  .toc-page {
+    padding: 60px 60px 40px;
+    page-break-after: always;
+    max-width: 900px;
+    margin: 0 auto;
+  }
+  .toc-page h2 { font-size: 1.6rem; font-weight: 800; color: #C0244C; margin-bottom: 28px; }
+  .toc-section { margin-bottom: 20px; }
+  .toc-section h3 { font-size: 13px; font-weight: 700; color: #999; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 10px; }
+  .toc-item { display: flex; justify-content: space-between; align-items: baseline; padding: 5px 0; border-bottom: 1px dotted #e5e7eb; font-size: 14px; color: #374151; }
+  .toc-item .dots { flex: 1; border-bottom: 1px dotted #d1d5db; margin: 0 8px; }
+  .toc-item .page { font-weight: 700; color: #C0244C; min-width: 24px; text-align: right; }
+
+  /* ── Section Pages ── */
+  .section-page {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 60px 60px 40px;
+  }
+  .section-page + .section-page { border-top: 2px solid #f3f4f6; }
+
+  /* Section header banner */
+  .section-banner {
+    background: linear-gradient(135deg, #C0244C 0%, #8B1535 100%);
+    border-radius: 16px;
+    padding: 28px 32px;
+    margin-bottom: 36px;
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    page-break-after: avoid;
+  }
+  .section-banner .icon { font-size: 36px; flex-shrink: 0; }
+  .section-banner h2 { font-size: 1.7rem; font-weight: 800; color: #fff; margin-bottom: 4px; }
+  .section-banner p { font-size: 13px; color: rgba(255,255,255,0.8); }
+
+  /* Admin banner variation */
+  .admin-banner {
+    background: linear-gradient(135deg, #1a1a2e 0%, #2d2d52 100%);
+  }
+
+  /* ── Typography ── */
+  h3 { font-size: 1.05rem; font-weight: 700; color: #1a1a2e; margin: 28px 0 10px; padding-bottom: 6px; border-bottom: 2px solid #f3f4f6; }
+  h4 { font-size: 0.95rem; font-weight: 700; color: #C0244C; margin: 18px 0 6px; }
+  p { margin-bottom: 10px; font-size: 14px; color: #374151; }
+  ul, ol { padding-left: 20px; margin-bottom: 12px; }
+  li { margin-bottom: 5px; font-size: 14px; color: #374151; }
+  strong { color: #1a1a2e; }
+
+  /* ── Cards ── */
+  .card-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin: 20px 0; }
+  .card {
+    background: #f9fafb;
+    border: 1px solid #e5e7eb;
+    border-radius: 12px;
+    padding: 18px 20px;
+    page-break-inside: avoid;
+  }
+  .card .card-icon { font-size: 26px; margin-bottom: 10px; }
+  .card h4 { font-size: 14px; font-weight: 700; color: #1a1a2e; margin: 0 0 6px; border: none; }
+  .card p { font-size: 13px; color: #6b7280; margin: 0; }
+
+  /* ── Steps ── */
+  .steps { margin: 16px 0; }
+  .step { display: flex; gap: 14px; margin-bottom: 16px; page-break-inside: avoid; }
+  .step-num {
+    width: 28px; height: 28px; border-radius: 50%;
+    background: #C0244C; color: #fff;
+    font-weight: 800; font-size: 13px;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0; margin-top: 1px;
+  }
+  .step-body h4 { margin: 0 0 3px; font-size: 14px; font-weight: 700; color: #1a1a2e; }
+  .step-body p { margin: 0; font-size: 13px; color: #6b7280; }
+
+  /* ── Tip / Note boxes ── */
+  .tip, .note, .warn {
+    border-radius: 10px;
+    padding: 14px 18px;
+    margin: 16px 0;
+    font-size: 13px;
+    line-height: 1.55;
+    page-break-inside: avoid;
+  }
+  .tip { background: #f0fdf4; border-left: 4px solid #16a34a; color: #166534; }
+  .note { background: #eff6ff; border-left: 4px solid #3b82f6; color: #1d4ed8; }
+  .warn { background: #fff7ed; border-left: 4px solid #f59e0b; color: #92400e; }
+  .tip strong, .note strong, .warn strong { color: inherit; }
+
+  /* ── Table ── */
+  table { width: 100%; border-collapse: collapse; margin: 16px 0; font-size: 13px; page-break-inside: avoid; }
+  th { background: #1a1a2e; color: #fff; padding: 10px 14px; text-align: left; font-weight: 700; }
+  td { padding: 9px 14px; border-bottom: 1px solid #e5e7eb; color: #374151; vertical-align: top; }
+  tr:nth-child(even) td { background: #f9fafb; }
+
+  /* ── Badge ── */
+  .badge { display: inline-block; border-radius: 999px; padding: 2px 10px; font-size: 11px; font-weight: 700; }
+  .badge-green { background: #dcfce7; color: #16a34a; }
+  .badge-amber { background: #fef3c7; color: #d97706; }
+  .badge-blue { background: #dbeafe; color: #1d4ed8; }
+  .badge-red { background: #fee2e2; color: #dc2626; }
+  .badge-purple { background: #ede9fe; color: #7c3aed; }
+
+  /* ── Nav map ── */
+  .nav-map { display: flex; gap: 10px; margin: 16px 0; flex-wrap: wrap; }
+  .nav-item { background: #f3f4f6; border-radius: 10px; padding: 10px 16px; text-align: center; min-width: 80px; }
+  .nav-item .nav-icon { font-size: 22px; margin-bottom: 4px; }
+  .nav-item p { font-size: 11px; font-weight: 700; color: #374151; margin: 0; }
+
+  /* ── Footer ── */
+  .page-footer {
+    text-align: center;
+    color: #9ca3af;
+    font-size: 11px;
+    padding: 20px 60px;
+    border-top: 1px solid #f3f4f6;
+    max-width: 900px;
+    margin: 0 auto;
+  }
+
+  /* ── Print ── */
+  @media print {
+    body { font-size: 13px; }
+    .cover { min-height: auto; padding: 80px 60px; }
+    .section-page { padding: 40px 60px 30px; }
+    .no-print { display: none !important; }
+    .page-break { page-break-before: always; }
+    a { color: inherit; text-decoration: none; }
+  }
+
+  /* ── Print button ── */
+  .print-bar {
+    position: fixed; bottom: 24px; right: 24px;
+    display: flex; gap: 10px;
+    z-index: 999;
+  }
+  .print-btn {
+    background: #C0244C; color: #fff;
+    border: none; border-radius: 12px;
+    padding: 12px 22px; font-size: 14px; font-weight: 700;
+    cursor: pointer; box-shadow: 0 4px 20px rgba(192,36,76,0.35);
+    display: flex; align-items: center; gap: 8px;
+    transition: background 0.2s;
+  }
+  .print-btn:hover { background: #a01e40; }
+</style>
+</head>
+<body>
+
+<!-- Print button -->
+<div class="print-bar no-print">
+  <button class="print-btn" onclick="window.print()">🖨️ Save as PDF</button>
+</div>
+
+<!-- ══════════════════════════════════════════════
+     COVER PAGE
+══════════════════════════════════════════════ -->
+<div class="cover">
+  <div class="cover-logo">💚</div>
+  <h1>Heritage Wellness App</h1>
+  <p class="subtitle">Complete User &amp; Administrator Guide</p>
+  <div class="cover-meta">
+    <span>📱 Employee Guide</span>
+    <span>🛡️ Administrator Guide</span>
+    <span>📅 June 2025</span>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════
+     TABLE OF CONTENTS
+══════════════════════════════════════════════ -->
+<div class="toc-page">
+  <h2>Table of Contents</h2>
+
+  <div class="toc-section">
+    <h3>Employee Guide</h3>
+    <div class="toc-item"><span>Getting Started — Login &amp; Profile Setup</span><span class="dots"></span><span class="page">3</span></div>
+    <div class="toc-item"><span>Dashboard</span><span class="dots"></span><span class="page">4</span></div>
+    <div class="toc-item"><span>Activities &amp; Enrollments</span><span class="dots"></span><span class="page">4</span></div>
+    <div class="toc-item"><span>Health Tracker</span><span class="dots"></span><span class="page">5</span></div>
+    <div class="toc-item"><span>Bulletin Board</span><span class="dots"></span><span class="page">5</span></div>
+    <div class="toc-item"><span>Leaderboard &amp; Rewards</span><span class="dots"></span><span class="page">6</span></div>
+    <div class="toc-item"><span>Community &amp; Notifications</span><span class="dots"></span><span class="page">6</span></div>
+    <div class="toc-item"><span>Profile &amp; Support</span><span class="dots"></span><span class="page">7</span></div>
+  </div>
+
+  <div class="toc-section">
+    <h3>Administrator Guide</h3>
+    <div class="toc-item"><span>Admin Dashboard</span><span class="dots"></span><span class="page">8</span></div>
+    <div class="toc-item"><span>Verifying Activity Submissions</span><span class="dots"></span><span class="page">9</span></div>
+    <div class="toc-item"><span>Health &amp; Enrollment Management</span><span class="dots"></span><span class="page">9</span></div>
+    <div class="toc-item"><span>Bulletin Board Moderation</span><span class="dots"></span><span class="page">10</span></div>
+    <div class="toc-item"><span>Managing Activities</span><span class="dots"></span><span class="page">10</span></div>
+    <div class="toc-item"><span>User &amp; Password Management</span><span class="dots"></span><span class="page">11</span></div>
+    <div class="toc-item"><span>Configuration (Business Units, Departments, Locations)</span><span class="dots"></span><span class="page">11</span></div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════
+     EMPLOYEE GUIDE
+══════════════════════════════════════════════ -->
+
+<!-- 1. Getting Started -->
+<div class="section-page page-break">
+  <div class="section-banner">
+    <div class="icon">🚀</div>
+    <div>
+      <h2>Getting Started</h2>
+      <p>Login, first-time setup, and navigating the app</p>
+    </div>
+  </div>
+
+  <h3>Logging In</h3>
+  <div class="steps">
+    <div class="step"><div class="step-num">1</div><div class="step-body"><h4>Open the App</h4><p>Visit the app URL provided by your administrator in any mobile or desktop browser.</p></div></div>
+    <div class="step"><div class="step-num">2</div><div class="step-body"><h4>Enter Credentials</h4><p>Use the email address and temporary password sent to you by your administrator.</p></div></div>
+    <div class="step"><div class="step-num">3</div><div class="step-body"><h4>Set Your Password</h4><p>On first login you will be prompted to choose a new personal password. Your password must be kept confidential.</p></div></div>
+    <div class="step"><div class="step-num">4</div><div class="step-body"><h4>Complete Your Profile</h4><p>Fill in your personal details, organisational info (Business Unit, Department, Location), and optionally upload a profile photo.</p></div></div>
+  </div>
+
+  <div class="note"><strong>Forgot your password?</strong> Tap <em>Forgot Password</em> on the login screen and submit a reset request. An administrator will approve it and send a recovery code.</div>
+
+  <h3>Navigation</h3>
+  <p>The bottom navigation bar gives quick access to all main sections:</p>
+  <div class="nav-map">
+    <div class="nav-item"><div class="nav-icon">🏠</div><p>Home</p></div>
+    <div class="nav-item"><div class="nav-icon">🏃</div><p>Activities</p></div>
+    <div class="nav-item"><div class="nav-icon">📋</div><p>Health</p></div>
+    <div class="nav-item"><div class="nav-icon">🏆</div><p>Leaderboard</p></div>
+    <div class="nav-item"><div class="nav-icon">👤</div><p>Profile</p></div>
+  </div>
+</div>
+
+<!-- 2. Dashboard -->
+<div class="section-page">
+  <div class="section-banner">
+    <div class="icon">🏠</div>
+    <div><h2>Dashboard</h2><p>Your personal wellness overview at a glance</p></div>
+  </div>
+
+  <p>The dashboard is your home screen. It displays:</p>
+  <div class="card-grid">
+    <div class="card"><div class="card-icon">⭐</div><h4>Total Points</h4><p>Your cumulative verified points. A weekly badge shows points earned in the last 7 days.</p></div>
+    <div class="card"><div class="card-icon">📊</div><h4>Current Rank</h4><p>Your position on the organisation leaderboard. Tap to view the full leaderboard.</p></div>
+    <div class="card"><div class="card-icon">📈</div><h4>Weekly Progress</h4><p>Your latest health metrics — weight, BMI, blood pressure, and steps. Tap <em>Log data</em> to add an entry.</p></div>
+    <div class="card"><div class="card-icon">🎯</div><h4>My Activities</h4><p>A summary of your currently enrolled activities and their status.</p></div>
+  </div>
+
+  <div class="tip"><strong>Tip:</strong> The <em>Weekly Progress</em> section is always visible. If no data has been logged yet, tap the <strong>+ Log data</strong> button to get started.</div>
+</div>
+
+<!-- 3. Activities -->
+<div class="section-page page-break">
+  <div class="section-banner">
+    <div class="icon">🏃</div>
+    <div><h2>Activities &amp; Enrollments</h2><p>Browse, enrol, submit proof, and earn points</p></div>
+  </div>
+
+  <h3>Browsing Activities</h3>
+  <p>Tap <strong>Activities</strong> in the bottom nav to see all available wellness activities. Use the category filter tabs to browse by type:</p>
+  <div style="display:flex;gap:8px;flex-wrap:wrap;margin:10px 0 16px;">
+    <span class="badge badge-green">🏃 Physical</span>
+    <span class="badge badge-purple">👥 Social</span>
+    <span class="badge badge-amber">💰 Financial</span>
+    <span class="badge" style="background:#fce7f3;color:#be185d;">🧘 Emotional</span>
+  </div>
+  <p>Each activity card shows the activity name, category, point value, and duration. Tap a card to see full details.</p>
+
+  <h3>Enrolling &amp; Submitting Proof</h3>
+  <div class="steps">
+    <div class="step"><div class="step-num">1</div><div class="step-body"><h4>Tap Enrol</h4><p>Open an activity and tap <strong>Enrol Now</strong>. Your status moves to <span class="badge badge-blue">In Progress</span>.</p></div></div>
+    <div class="step"><div class="step-num">2</div><div class="step-body"><h4>Complete the Activity</h4><p>Participate in the activity at your own pace.</p></div></div>
+    <div class="step"><div class="step-num">3</div><div class="step-body"><h4>Submit Proof</h4><p>Tap <strong>Submit Proof</strong> on the activity. Upload a photo, video, or document, add an optional note, then tap <strong>Submit</strong>. Status becomes <span class="badge badge-amber">Pending Verification</span>.</p></div></div>
+    <div class="step"><div class="step-num">4</div><div class="step-body"><h4>Earn Points</h4><p>Once an admin verifies your submission, status changes to <span class="badge badge-green">Verified</span> and points are added to your total automatically.</p></div></div>
+  </div>
+
+  <h3>Enrollment Statuses</h3>
+  <table>
+    <tr><th>Status</th><th>Meaning</th></tr>
+    <tr><td><span class="badge badge-blue">In Progress</span></td><td>You are enrolled and actively working on the activity</td></tr>
+    <tr><td><span class="badge badge-amber">Pending Verification</span></td><td>Proof submitted — awaiting admin review</td></tr>
+    <tr><td><span class="badge badge-green">Verified</span></td><td>Approved — points have been added to your account</td></tr>
+    <tr><td><span class="badge badge-red">Rejected</span></td><td>Submission was not accepted — see the admin note for details</td></tr>
+  </table>
+</div>
+
+<!-- 4. Health Tracker -->
+<div class="section-page">
+  <div class="section-banner">
+    <div class="icon">❤️</div>
+    <div><h2>Health Tracker</h2><p>Log and monitor your personal health metrics</p></div>
+  </div>
+
+  <h3>Logging Health Data</h3>
+  <p>Tap <strong>Health</strong> in the bottom nav. Tap <strong>+ Log Today</strong> to add a new entry. You can log:</p>
+  <div class="card-grid">
+    <div class="card"><div class="card-icon">⚖️</div><h4>Weight</h4><p>Enter your weight in kg or lbs.</p></div>
+    <div class="card"><div class="card-icon">📊</div><h4>BMI</h4><p>Body Mass Index — calculated or entered manually.</p></div>
+    <div class="card"><div class="card-icon">❤️</div><h4>Blood Pressure</h4><p>Systolic / Diastolic readings in mmHg.</p></div>
+    <div class="card"><div class="card-icon">👟</div><h4>Steps</h4><p>Daily step count.</p></div>
+  </div>
+  <p>Past entries are listed in reverse-chronological order. Tap an entry to view details. Your dashboard automatically pulls from the most recent entry.</p>
+
+  <div class="tip"><strong>Privacy:</strong> Your health data is only visible to you and authorised administrators. It is never shared publicly.</div>
+</div>
+
+<!-- 5. Bulletin Board -->
+<div class="section-page page-break">
+  <div class="section-banner">
+    <div class="icon">📌</div>
+    <div><h2>Bulletin Board</h2><p>Share updates, photos, and connect with your colleagues</p></div>
+  </div>
+
+  <h3>Viewing Posts</h3>
+  <p>Tap the <strong>Bulletin</strong> icon (pin) in the bottom nav. Posts appear newest first and may include text, images, and video attachments.</p>
+
+  <h3>Creating a Post</h3>
+  <div class="steps">
+    <div class="step"><div class="step-num">1</div><div class="step-body"><h4>Tap the Compose button</h4><p>Tap the <strong>+ New Post</strong> button at the bottom of the bulletin board.</p></div></div>
+    <div class="step"><div class="step-num">2</div><div class="step-body"><h4>Write your message</h4><p>Enter your text in the message field.</p></div></div>
+    <div class="step"><div class="step-num">3</div><div class="step-body"><h4>Attach media (optional)</h4><p>Tap the attachment icon to upload an image, video, or document.</p></div></div>
+    <div class="step"><div class="step-num">4</div><div class="step-body"><h4>Post</h4><p>Tap <strong>Post</strong>. Your message will be visible to everyone in the organisation immediately.</p></div></div>
+  </div>
+
+  <div class="warn"><strong>Community Standards:</strong> Posts must be respectful and relevant. Administrators can remove or censor posts that violate company policy.</div>
+</div>
+
+<!-- 6. Leaderboard & Rewards -->
+<div class="section-page">
+  <div class="section-banner">
+    <div class="icon">🏆</div>
+    <div><h2>Leaderboard &amp; Rewards</h2><p>Track your ranking and redeem your wellness points</p></div>
+  </div>
+
+  <h3>Leaderboard</h3>
+  <p>The leaderboard shows the top wellness contributors across the organisation. You can filter by:</p>
+  <ul>
+    <li><strong>Overall Points</strong> — total verified points earned</li>
+    <li><strong>Business Unit</strong> — compare within your business unit</li>
+    <li><strong>Department</strong> — compare within your department</li>
+    <li><strong>Location</strong> — compare within your office location</li>
+  </ul>
+  <p>Medal icons 🥇🥈🥉 highlight the top three positions. Your own entry is highlighted.</p>
+
+  <h3>Rewards</h3>
+  <p>Points you earn can be used to redeem wellness rewards. Visit the <strong>Rewards</strong> page to browse available rewards. Redemption is subject to availability and administrator approval.</p>
+</div>
+
+<!-- 7. Community & Notifications -->
+<div class="section-page">
+  <div class="section-banner">
+    <div class="icon">🔔</div>
+    <div><h2>Community &amp; Notifications</h2><p>Stay connected and up to date</p></div>
+  </div>
+
+  <h3>Community</h3>
+  <p>The Community page shows aggregated wellness activity across the organisation — a motivational overview of collective progress.</p>
+
+  <h3>Notifications</h3>
+  <p>Tap the bell icon in the top-right corner of your dashboard to view notifications. You'll be notified when:</p>
+  <ul>
+    <li>An activity submission is <strong>verified</strong> or <strong>rejected</strong></li>
+    <li>You earn a new <strong>badge or milestone</strong></li>
+    <li>An administrator leaves a <strong>note</strong> on your submission</li>
+    <li>A response to your support ticket is received</li>
+  </ul>
+</div>
+
+<!-- 8. Profile & Support -->
+<div class="section-page page-break">
+  <div class="section-banner">
+    <div class="icon">👤</div>
+    <div><h2>Profile &amp; Support</h2><p>Manage your account and get help</p></div>
+  </div>
+
+  <h3>Updating Your Profile</h3>
+  <p>Tap <strong>Profile</strong> in the bottom nav to view and update your personal information:</p>
+  <ul>
+    <li>Name, date of birth, and gender</li>
+    <li>Height (in cm or inches)</li>
+    <li>Business Unit, Department, and Location</li>
+    <li>Profile photo</li>
+  </ul>
+  <p>Tap <strong>Edit Profile</strong>, make your changes, then tap <strong>Save</strong>.</p>
+
+  <h3>Changing Your Password</h3>
+  <ol>
+    <li>Go to <strong>Profile → Change Password</strong></li>
+    <li>Enter your current password</li>
+    <li>Enter and confirm your new password</li>
+    <li>Tap <strong>Update Password</strong></li>
+  </ol>
+
+  <h3>Getting Support</h3>
+  <p>Tap <strong>Support</strong> from the profile menu. You can:</p>
+  <ul>
+    <li>Browse frequently asked questions (FAQs)</li>
+    <li>Submit a support ticket to your administrator</li>
+  </ul>
+  <div class="tip"><strong>Tip:</strong> Provide as much detail as possible in your support ticket to help us resolve your issue quickly.</div>
+</div>
+
+<!-- ══════════════════════════════════════════════
+     ADMINISTRATOR GUIDE
+══════════════════════════════════════════════ -->
+
+<div class="section-page page-break">
+  <div class="section-banner admin-banner">
+    <div class="icon">🛡️</div>
+    <div><h2>Administrator Guide</h2><p>Managing the Heritage Wellness platform</p></div>
+  </div>
+  <p>Administrators have access to a dedicated admin interface. After logging in, admins are taken to the <strong>Admin Dashboard</strong> instead of the employee view.</p>
+  <div class="note"><strong>Admin Navigation:</strong> Dashboard · Health · Manage · Bulletin · Settings</div>
+
+  <h3>Admin Dashboard Overview</h3>
+  <p>The admin dashboard provides organisation-wide KPIs:</p>
+  <table>
+    <tr><th>Metric</th><th>Description</th></tr>
+    <tr><td>Total Employees Enrolled</td><td>Number of active employee accounts</td></tr>
+    <tr><td>Pending</td><td>Combined count of activity verifications + password reset requests awaiting action</td></tr>
+    <tr><td>Avg Completion</td><td>Percentage of all active users who have completed their profile</td></tr>
+    <tr><td>Top Weight Loss</td><td>Employees with the greatest net weight loss since their first health entry</td></tr>
+    <tr><td>Top Steps</td><td>Employees with the highest cumulative step count</td></tr>
+  </table>
+  <p>Charts show employee distribution by Department, Business Unit, and Location, plus a wellness activity trend line.</p>
+</div>
+
+<!-- Admin: Verify -->
+<div class="section-page">
+  <div class="section-banner admin-banner">
+    <div class="icon">✅</div>
+    <div><h2>Verifying Activity Submissions</h2><p>Review and approve or reject employee proof</p></div>
+  </div>
+
+  <p>Tap <strong>Pending</strong> on the dashboard, or go to <strong>Admin → Verify</strong>. Each submission card shows:</p>
+  <ul>
+    <li>Employee name and the activity they completed</li>
+    <li>Uploaded proof (image, video, or document)</li>
+    <li>Employee's optional note</li>
+    <li>Submission timestamp</li>
+  </ul>
+
+  <h3>Approving a Submission</h3>
+  <div class="steps">
+    <div class="step"><div class="step-num">1</div><div class="step-body"><h4>Review the proof</h4><p>Tap the attachment to view the uploaded evidence in full.</p></div></div>
+    <div class="step"><div class="step-num">2</div><div class="step-body"><h4>Tap Verify</h4><p>Points are automatically added to the employee's account. They receive a notification.</p></div></div>
+    <div class="step"><div class="step-num">3</div><div class="step-body"><h4>Or tap Reject</h4><p>Enter an optional note explaining why, then confirm. The employee is notified and can re-submit.</p></div></div>
+  </div>
+
+  <div class="warn"><strong>Note:</strong> Verifying a submission awards the activity's full point value. Deleting a verified enrollment later will automatically deduct those points.</div>
+</div>
+
+<!-- Admin: Health & Enrollments -->
+<div class="section-page page-break">
+  <div class="section-banner admin-banner">
+    <div class="icon">❤️</div>
+    <div><h2>Health &amp; Enrollment Management</h2><p>View, edit, and manage employee health data and enrollments</p></div>
+  </div>
+
+  <p>Go to <strong>Health</strong> in the admin nav. This page has two tabs:</p>
+
+  <h3>Health Tab</h3>
+  <ol>
+    <li>Search for an employee by name or email</li>
+    <li>Tap their name to view all their health metric entries</li>
+    <li>Tap <strong>Edit</strong> on any entry to correct data</li>
+    <li>Tap <strong>Delete</strong> to permanently remove an entry</li>
+  </ol>
+
+  <h3>Enrolled Tab</h3>
+  <p>Shows all activity enrollments across the entire organisation with filters and bulk actions:</p>
+  <ul>
+    <li><strong>Search</strong> by employee name, email, or activity name</li>
+    <li><strong>Filter</strong> by status (In Progress, Pending, Verified, Rejected)</li>
+    <li><strong>Delete individual</strong> — tap the trash icon on a card</li>
+    <li><strong>Bulk delete</strong> — tap <em>Select</em> in the header, check cards, then <em>Delete selected</em></li>
+    <li><strong>Delete all</strong> — deletes all records matching the current filter/search</li>
+  </ul>
+  <div class="warn"><strong>Important:</strong> Deleting a verified enrollment automatically deducts the associated points from the employee's total.</div>
+</div>
+
+<!-- Admin: Bulletin Moderation -->
+<div class="section-page">
+  <div class="section-banner admin-banner">
+    <div class="icon">📌</div>
+    <div><h2>Bulletin Board Moderation</h2><p>Moderate employee posts to maintain a safe environment</p></div>
+  </div>
+
+  <p>Go to <strong>Bulletin</strong> in the admin nav. All posts are displayed with moderation options:</p>
+
+  <table>
+    <tr><th>Action</th><th>Effect</th></tr>
+    <tr><td>🗑️ Delete</td><td>Permanently removes the post. Employee is not notified.</td></tr>
+    <tr><td>🚫 Censor</td><td>Hides the post content and replaces it with a moderation message. The post record is retained.</td></tr>
+    <tr><td>↩️ Restore</td><td>Un-censors a previously censored post, making it visible again.</td></tr>
+  </table>
+
+  <div class="note"><strong>Best Practice:</strong> Use <em>Censor</em> when you may need to review further. Use <em>Delete</em> for clear policy violations.</div>
+</div>
+
+<!-- Admin: Managing Activities -->
+<div class="section-page page-break">
+  <div class="section-banner admin-banner">
+    <div class="icon">🎯</div>
+    <div><h2>Managing Activities</h2><p>Create, edit, and deactivate wellness activities</p></div>
+  </div>
+
+  <p>Go to <strong>Manage</strong> in the admin nav.</p>
+
+  <h3>Creating a New Activity</h3>
+  <div class="steps">
+    <div class="step"><div class="step-num">1</div><div class="step-body"><h4>Tap + New Activity</h4><p>Opens the activity creation form.</p></div></div>
+    <div class="step"><div class="step-num">2</div><div class="step-body"><h4>Fill in Details</h4><p>Enter name, description, category, points value, optional duration, and an emoji icon.</p></div></div>
+    <div class="step"><div class="step-num">3</div><div class="step-body"><h4>Tap Save</h4><p>The activity is immediately available for employees to enrol in.</p></div></div>
+  </div>
+
+  <h3>Editing an Activity</h3>
+  <p>Tap the <strong>Edit</strong> (pencil) icon on any activity card. Update any fields and tap Save. Changes take effect immediately.</p>
+
+  <h3>Deactivating an Activity</h3>
+  <p>Toggle the active switch on an activity card to deactivate it. Deactivated activities are hidden from employees but existing enrollments are preserved.</p>
+
+  <h3>Point Values Guide</h3>
+  <table>
+    <tr><th>Activity Difficulty</th><th>Suggested Points</th></tr>
+    <tr><td>Light / Short-term (e.g. 1-week challenge)</td><td>50 – 100</td></tr>
+    <tr><td>Moderate (e.g. monthly commitment)</td><td>100 – 250</td></tr>
+    <tr><td>Intensive (e.g. 3-month programme)</td><td>250 – 500</td></tr>
+  </table>
+</div>
+
+<!-- Admin: Users & Passwords -->
+<div class="section-page">
+  <div class="section-banner admin-banner">
+    <div class="icon">👥</div>
+    <div><h2>User &amp; Password Management</h2><p>Invite employees and handle account access</p></div>
+  </div>
+
+  <h3>Inviting a New Employee</h3>
+  <div class="steps">
+    <div class="step"><div class="step-num">1</div><div class="step-body"><h4>Go to Settings → Invite User</h4><p>Enter the employee's email address and select their role (Employee or Admin).</p></div></div>
+    <div class="step"><div class="step-num">2</div><div class="step-body"><h4>Send Invite</h4><p>A temporary password is generated. Share it securely with the employee.</p></div></div>
+    <div class="step"><div class="step-num">3</div><div class="step-body"><h4>Employee logs in</h4><p>They will be prompted to set a new password and complete their profile on first login.</p></div></div>
+  </div>
+
+  <h3>Password Reset Requests</h3>
+  <p>When an employee submits a password reset request, it appears in the <strong>Pending</strong> counter on the admin dashboard. To approve:</p>
+  <ol>
+    <li>Go to <strong>Admin → Verify</strong> and switch to the <em>Password Resets</em> section</li>
+    <li>Review the request and tap <strong>Approve Reset</strong></li>
+    <li>A recovery code is issued to the employee</li>
+  </ol>
+
+  <h3>Deactivating a User</h3>
+  <p>Go to <strong>Settings → Manage Admins</strong> or the user management section. Toggle the user's active status off. Deactivated users cannot log in but their data is preserved.</p>
+</div>
+
+<!-- Admin: Config -->
+<div class="section-page page-break">
+  <div class="section-banner admin-banner">
+    <div class="icon">⚙️</div>
+    <div><h2>Configuration</h2><p>Set up Business Units, Departments, and Locations</p></div>
+  </div>
+
+  <p>Go to <strong>Settings → Configuration</strong> to manage the organisational structure used across the app.</p>
+
+  <div class="card-grid">
+    <div class="card"><div class="card-icon">🏢</div><h4>Business Units</h4><p>Top-level organisational divisions. Employees are assigned to one Business Unit during profile setup.</p></div>
+    <div class="card"><div class="card-icon">🗂️</div><h4>Departments</h4><p>Sub-groups within the organisation. Used for leaderboard filtering and reporting.</p></div>
+    <div class="card"><div class="card-icon">📍</div><h4>Locations</h4><p>Office or work sites. Employees select their primary location on their profile.</p></div>
+  </div>
+
+  <h3>Adding / Editing</h3>
+  <ol>
+    <li>Select the category tab (Business Units, Departments, or Locations)</li>
+    <li>Tap <strong>+ Add New</strong>, enter the name, and tap <strong>Save</strong></li>
+    <li>To edit, tap the pencil icon on any existing entry</li>
+    <li>To deactivate, toggle the active switch — deactivated items no longer appear in dropdowns</li>
+  </ol>
+
+  <div class="warn"><strong>Caution:</strong> Deactivating a Business Unit, Department, or Location does not remove it from existing user profiles. It only prevents new users from selecting it.</div>
+</div>
+
+<!-- Footer -->
+<div class="page-footer">
+  <p>Heritage Wellness App · User Guide · Confidential · For internal use only</p>
+  <p style="margin-top:4px;">Questions? Contact your system administrator or submit a support ticket in the app.</p>
+</div>
+
+</body>
+</html>
