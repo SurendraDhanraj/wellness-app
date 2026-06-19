@@ -45,19 +45,19 @@ export const getAdminHealthStats = query({
         // Collect all health metrics
         const allMetrics = await ctx.db.query("healthMetrics").collect();
 
-        // Group by user
-        const byUser: Record<string, typeof allMetrics> = {};
+        // Group by user — keep the original typed Id, not a string
+        const byUser: Record<string, { records: typeof allMetrics; userId: any }> = {};
         for (const m of allMetrics) {
             const uid = m.userId.toString();
-            if (!byUser[uid]) byUser[uid] = [];
-            byUser[uid].push(m);
+            if (!byUser[uid]) byUser[uid] = { records: [], userId: m.userId };
+            byUser[uid].records.push(m);
         }
 
         // Compute weight loss (earliest weight - latest weight, sorted by date)
-        const weightLoss: { userId: string; loss: number; latestWeight: number }[] = [];
-        const topSteps: { userId: string; steps: number }[] = [];
+        const weightLoss: { userId: any; loss: number; latestWeight: number }[] = [];
+        const topSteps: { userId: any; steps: number }[] = [];
 
-        for (const [uid, records] of Object.entries(byUser)) {
+        for (const { records, userId } of Object.values(byUser)) {
             // Sort ascending by date
             const sorted = [...records].sort((a, b) => a.date.localeCompare(b.date));
             const withWeight = sorted.filter(r => r.weight != null);
@@ -65,23 +65,23 @@ export const getAdminHealthStats = query({
                 const first = withWeight[0].weight as number;
                 const last = withWeight[withWeight.length - 1].weight as number;
                 const loss = first - last; // positive = lost weight
-                if (loss > 0) weightLoss.push({ userId: uid, loss, latestWeight: last });
+                if (loss > 0) weightLoss.push({ userId, loss, latestWeight: last });
             }
             // Total cumulative steps
             const totalSteps = records.filter(r => r.steps != null).reduce((acc, r) => acc + (r.steps as number), 0);
-            if (totalSteps > 0) topSteps.push({ userId: uid, steps: totalSteps });
+            if (totalSteps > 0) topSteps.push({ userId, steps: totalSteps });
         }
 
         weightLoss.sort((a, b) => b.loss - a.loss);
         topSteps.sort((a, b) => b.steps - a.steps);
 
-        // Fetch user details for top 5 of each
+        // Fetch user details using ctx.db.get() with the original typed Id
         const topLoss = await Promise.all(weightLoss.slice(0, 5).map(async (e) => {
-            const user = await ctx.db.query("users").filter(q => q.eq(q.field("_id"), e.userId as any)).first();
+            const user = await ctx.db.get(e.userId);
             return { ...e, user };
         }));
         const topStep = await Promise.all(topSteps.slice(0, 5).map(async (e) => {
-            const user = await ctx.db.query("users").filter(q => q.eq(q.field("_id"), e.userId as any)).first();
+            const user = await ctx.db.get(e.userId);
             return { ...e, user };
         }));
 
