@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useQuery } from "convex/react";
 import { api } from "../../../convex/_generated/api";
-import { Bell, Star, BarChart2, Gauge, Ruler, ChevronRight, Plus, Heart, Footprints } from "lucide-react";
+import { Bell, Star, BarChart2, Gauge, Ruler, Activity, ChevronRight, Plus, Heart, Footprints } from "lucide-react";
 import { EmployeeBottomNav } from "@/components/BottomNav";
 
 export default function DashboardPage() {
