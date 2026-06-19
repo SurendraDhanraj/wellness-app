@@ -29,6 +29,7 @@ export default function AdminDashboardPage() {
     }, [router]);
 
     const employees = useQuery(api.users.getAllEmployees) || [];
+    const allUsers = useQuery(api.users.getAllUsers) || [];
     const pending = useQuery(api.activities.getPendingVerifications) || [];
     const pendingResets = useQuery(api.users.getPendingPasswordResetRequests) || [];
     const departments = useQuery(api.config.getDepartments) || [];
@@ -40,7 +41,9 @@ export default function AdminDashboardPage() {
 
     const totalEnrolled = employees.length;
     const totalPoints = employees.reduce((sum: number, e: any) => sum + e.totalPoints, 0);
-    const avgCompletion = employees.length > 0 ? Math.round((employees.filter((e: any) => e.isProfileComplete).length / employees.length) * 100) : 0;
+    // Count profile completion across ALL users (employees + admins)
+    const activeUsers = allUsers.filter((u: any) => u.isActive);
+    const avgCompletion = activeUsers.length > 0 ? Math.round((activeUsers.filter((u: any) => u.isProfileComplete).length / activeUsers.length) * 100) : 0;
 
     const deptData = departments.slice(0, 8).map((d: any) => employees.filter((e: any) => e.departmentId === d._id).length);
     const buData = (businessUnits as any[]).map((b: any) => employees.filter((e: any) => e.businessUnitId === b._id).length);
