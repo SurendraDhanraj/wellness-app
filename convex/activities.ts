@@ -247,3 +247,32 @@ export const bulkVerifyEnrollments = mutation({
         return { success: true, results };
     },
 });
+
+// Admin: all enrollments with user + activity details, optionally filtered
+export const getAllEnrollmentsAdmin = query({
+    args: {
+        status: v.optional(v.string()),
+        activityId: v.optional(v.id("activities")),
+    },
+    handler: async (ctx, args) => {
+        let enrollments;
+        if (args.status && args.status !== "all") {
+            enrollments = await ctx.db.query("enrollments")
+                .withIndex("by_status", (q) => q.eq("status", args.status as any))
+                .order("desc").take(200);
+        } else if (args.activityId) {
+            enrollments = await ctx.db.query("enrollments")
+                .withIndex("by_activity", (q) => q.eq("activityId", args.activityId!))
+                .order("desc").take(200);
+        } else {
+            enrollments = await ctx.db.query("enrollments").order("desc").take(200);
+        }
+        const result = [];
+        for (const e of enrollments) {
+            const user = await ctx.db.get(e.userId);
+            const activity = await ctx.db.get(e.activityId);
+            result.push({ ...e, user, activity });
+        }
+        return result;
+    },
+});

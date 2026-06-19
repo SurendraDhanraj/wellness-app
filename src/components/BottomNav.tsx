@@ -1,6 +1,6 @@
 "use client";
 import { useRouter, usePathname } from "next/navigation";
-import { Home, Trophy, Activity, User, Users, Settings, Pin } from "lucide-react";
+import { Home, Trophy, Activity, User, Users, Settings, Pin, ClipboardList } from "lucide-react";
 
 const employeeNav = [
     { href: "/dashboard", icon: Home, label: "Home" },
@@ -13,8 +13,8 @@ const employeeNav = [
 const adminNav = [
     { href: "/admin/dashboard", icon: Home, label: "Dashboard" },
     { href: "/admin/health", icon: Activity, label: "Health" },
+    { href: "/admin/enrollments", icon: ClipboardList, label: "Enrolled" },
     { href: "/admin/manage", icon: Users, label: "Manage" },
-    { href: "/admin/bulletin", icon: Pin, label: "Bulletin" },
     { href: "/admin/settings", icon: Settings, label: "Settings" },
 ];
 
