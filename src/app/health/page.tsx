@@ -301,7 +301,7 @@ export default function HealthPage() {
 
     const autoCalculatedBMI: number | null = (() => {
         if (!form.weight || !userProfile?.height) return null;
-        return calcBMI(parseFloat(form.weight), form.weightUnit, userProfile.height, userProfile.heightUnit ?? "cm");
+        return calcBMI(parseFloat(form.weight), form.weightUnit, userProfile.height, (userProfile.heightUnit ?? "cm") as "cm" | "in");
     })();
 
     // Build graph series (chronological order: oldest first)
