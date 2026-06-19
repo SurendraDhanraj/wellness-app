@@ -183,7 +183,7 @@ export default function AdminBulletinPage() {
                                     </p>
 
                                     {m.mediaUrl && !isCensored && (
-                                        <img src={m.mediaUrl} alt="Attachment" style={{ width: "100%", borderRadius: "var(--radius-md)", maxHeight: 160, objectFit: "cover", marginBottom: 8 }} />
+                                        <img src={m.mediaUrl} alt="Attachment" onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }} style={{ width: "100%", borderRadius: "var(--radius-md)", maxHeight: 160, objectFit: "cover", marginBottom: 8 }} />
                                     )}
 
                                     {/* Stats row */}

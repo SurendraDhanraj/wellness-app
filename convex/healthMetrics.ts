@@ -99,4 +99,38 @@ export const getAllSubmissions = query({
     },
 });
 
+// Admin: get all health metrics for a specific user (full history)
+export const getHealthMetricsForUser = query({
+    args: { userId: v.id("users") },
+    handler: async (ctx, args) => {
+        const records = await ctx.db.query("healthMetrics")
+            .withIndex("by_user", (q) => q.eq("userId", args.userId))
+            .order("desc").take(365);
+        return records.sort((a, b) => b.date.localeCompare(a.date));
+    },
+});
 
+// Admin: update a health metric entry
+export const updateHealthMetric = mutation({
+    args: {
+        metricId: v.id("healthMetrics"),
+        weight: v.optional(v.number()),
+        weightUnit: v.optional(v.union(v.literal("kg"), v.literal("lbs"))),
+        bmi: v.optional(v.number()),
+        bloodPressureSystolic: v.optional(v.number()),
+        bloodPressureDiastolic: v.optional(v.number()),
+        steps: v.optional(v.number()),
+    },
+    handler: async (ctx, args) => {
+        const { metricId, ...updates } = args;
+        await ctx.db.patch(metricId, updates);
+    },
+});
+
+// Admin: delete a health metric entry
+export const deleteHealthMetric = mutation({
+    args: { metricId: v.id("healthMetrics") },
+    handler: async (ctx, args) => {
+        await ctx.db.delete(args.metricId);
+    },
+});
