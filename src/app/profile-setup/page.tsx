@@ -19,7 +19,7 @@ export default function ProfileSetupPage() {
     const [form, setForm] = useState({
         firstName: "", surname: "", dateOfBirth: "",
         gender: "" as "male" | "female" | "other" | "",
-        height: "", heightUnit: "cm" as "cm" | "ft",
+        height: "", heightUnit: "cm" as "cm" | "in",
         businessUnitId: "", departmentId: "", locationId: "",
         avatarUrl: "",
     });
@@ -42,7 +42,7 @@ export default function ProfileSetupPage() {
                 dateOfBirth: userProfile.dateOfBirth || "",
                 gender: (userProfile.gender as any) || "",
                 height: userProfile.height ? String(userProfile.height) : "",
-                heightUnit: (userProfile.heightUnit as "cm" | "ft") || "cm",
+                heightUnit: (userProfile.heightUnit as "cm" | "in") || "cm",
                 businessUnitId: userProfile.businessUnitId || "",
                 departmentId: userProfile.departmentId || "",
                 locationId: userProfile.locationId || "",
@@ -205,7 +205,7 @@ export default function ProfileSetupPage() {
                             <div style={{ display: "flex", gap: 8 }}>
                                 <input className="input" type="number" placeholder="Enter height" value={form.height} onChange={(e) => set("height", e.target.value)} style={{ flex: 1 }} id="height" />
                                 <div className="segmented" style={{ width: 100, flexShrink: 0 }}>
-                                    {(["cm", "ft"] as const).map((u) => (
+                                    {(["cm", "in"] as const).map((u) => (
                                         <button key={u} type="button" className={`seg-btn ${form.heightUnit === u ? "active" : ""}`} onClick={() => set("heightUnit", u)}>{u}</button>
                                     ))}
                                 </div>

@@ -9,9 +9,9 @@ import { format } from "date-fns";
 
 const today = () => format(new Date(), "yyyy-MM-dd");
 
-function calcBMI(weight: number, wUnit: "kg" | "lbs", height: number, hUnit: "cm" | "ft"): number {
+function calcBMI(weight: number, wUnit: "kg" | "lbs", height: number, hUnit: "cm" | "in"): number {
     const weightKg = wUnit === "lbs" ? weight * 0.453592 : weight;
-    const heightM = hUnit === "ft" ? height * 0.3048 : height / 100;
+    const heightM = hUnit === "in" ? height * 0.0254 : height / 100;
     if (!heightM) return 0;
     return parseFloat((weightKg / (heightM * heightM)).toFixed(1));
 }
