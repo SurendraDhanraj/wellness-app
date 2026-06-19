@@ -277,20 +277,38 @@ export const getAllEnrollmentsAdmin = query({
     },
 });
 
-// Admin: delete a single enrollment
+// Helper: deduct points for a verified enrollment before deleting
+async function deductAndDelete(ctx: any, enrollmentId: any) {
+    const enrollment = await ctx.db.get(enrollmentId);
+    if (!enrollment) return;
+
+    // Only deduct if the enrollment was verified (points were awarded)
+    if (enrollment.status === "verified") {
+        const activity = await ctx.db.get(enrollment.activityId);
+        const user = await ctx.db.get(enrollment.userId);
+        if (activity && user) {
+            const newPoints = Math.max(0, user.totalPoints - activity.points);
+            await ctx.db.patch(enrollment.userId, { totalPoints: newPoints });
+        }
+    }
+
+    await ctx.db.delete(enrollmentId);
+}
+
+// Admin: delete a single enrollment (deducts points if verified)
 export const deleteEnrollment = mutation({
     args: { enrollmentId: v.id("enrollments") },
     handler: async (ctx, args) => {
-        await ctx.db.delete(args.enrollmentId);
+        await deductAndDelete(ctx, args.enrollmentId);
     },
 });
 
-// Admin: delete multiple enrollments by ID array
+// Admin: delete multiple enrollments by ID array (deducts points for each verified one)
 export const deleteEnrollments = mutation({
     args: { enrollmentIds: v.array(v.id("enrollments")) },
     handler: async (ctx, args) => {
         for (const id of args.enrollmentIds) {
-            await ctx.db.delete(id);
+            await deductAndDelete(ctx, id);
         }
         return { deleted: args.enrollmentIds.length };
     },
