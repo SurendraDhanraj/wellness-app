@@ -170,23 +170,22 @@ export default function AdminHealthPage() {
                 )}
             </header>
 
-            {/* Tab bar */}
-            {!isHealthUserView && (
-                <div style={{ display: "flex", borderBottom: "1px solid var(--color-admin-border)", background: "var(--color-admin-card)", marginBottom: 0 }}>
-                    {(["health", "enrollments"] as const).map(t => (
-                        <button
-                            key={t}
-                            onClick={() => setTab(t)}
-                            style={{ flex: 1, padding: "12px 0", fontSize: 13, fontWeight: tab === t ? 700 : 500, color: tab === t ? "var(--color-primary)" : "var(--color-admin-text-muted)", background: "none", border: "none", borderBottom: tab === t ? "2px solid var(--color-primary)" : "2px solid transparent", cursor: "pointer", textTransform: "capitalize" }}
-                            id={`tab-${t}`}
-                        >
-                            {t === "health" ? "Health" : "Enrolled"}
-                        </button>
-                    ))}
-                </div>
-            )}
-
             <main className="admin-content">
+                {/* Tab bar */}
+                {!isHealthUserView && (
+                    <div style={{ display: "flex", borderBottom: "1px solid var(--color-admin-border)", background: "var(--color-admin-card)", margin: "0 calc(-1 * var(--spacing-md)) var(--spacing-md)", paddingLeft: "var(--spacing-md)", paddingRight: "var(--spacing-md)" }}>
+                        {(["health", "enrollments"] as const).map(t => (
+                            <button
+                                key={t}
+                                onClick={() => setTab(t)}
+                                style={{ flex: 1, padding: "12px 0", fontSize: 13, fontWeight: tab === t ? 700 : 500, color: tab === t ? "var(--color-primary)" : "var(--color-admin-text-muted)", background: "none", border: "none", borderBottom: tab === t ? "2px solid var(--color-primary)" : "2px solid transparent", cursor: "pointer", textTransform: "capitalize" }}
+                                id={`tab-${t}`}
+                            >
+                                {t === "health" ? "Health" : "Enrolled"}
+                            </button>
+                        ))}
+                    </div>
+                )}
                 {/* ══════ HEALTH TAB ══════ */}
                 {tab === "health" && (
                     <>
