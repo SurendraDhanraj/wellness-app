@@ -172,6 +172,25 @@
     a { color: inherit; text-decoration: none; }
   }
 
+  /* ── Screenshots ── */
+  .screenshot-row { display: flex; gap: 20px; margin: 20px 0; align-items: flex-start; flex-wrap: wrap; }
+  .screenshot-row.center { justify-content: center; }
+  .screenshot-wrap { flex: 0 0 auto; text-align: center; }
+  .screenshot-wrap p { font-size: 11px; color: #6b7280; margin-top: 6px; font-style: italic; }
+  .screenshot {
+    width: 220px;
+    border-radius: 20px;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.18), 0 2px 8px rgba(0,0,0,0.10);
+    display: block;
+    border: 1px solid #e5e7eb;
+  }
+  .screenshot.wide { width: 300px; }
+  @media print {
+    .screenshot { width: 180px; }
+    .screenshot.wide { width: 240px; }
+    .screenshot-row { gap: 14px; }
+  }
+
   /* ── Print button ── */
   .print-bar {
     position: fixed; bottom: 24px; right: 24px;
@@ -254,6 +273,13 @@
     </div>
   </div>
 
+  <div class="screenshot-row center">
+    <div class="screenshot-wrap">
+      <img src="/help-images/login.png" alt="Login screen" class="screenshot" />
+      <p>Login screen</p>
+    </div>
+  </div>
+
   <h3>Logging In</h3>
   <div class="steps">
     <div class="step"><div class="step-num">1</div><div class="step-body"><h4>Open the App</h4><p>Visit the app URL provided by your administrator in any mobile or desktop browser.</p></div></div>
@@ -282,6 +308,13 @@
     <div><h2>Dashboard</h2><p>Your personal wellness overview at a glance</p></div>
   </div>
 
+  <div class="screenshot-row center">
+    <div class="screenshot-wrap">
+      <img src="/help-images/dashboard.png" alt="Employee dashboard" class="screenshot" />
+      <p>Employee dashboard</p>
+    </div>
+  </div>
+
   <p>The dashboard is your home screen. It displays:</p>
   <div class="card-grid">
     <div class="card"><div class="card-icon">⭐</div><h4>Total Points</h4><p>Your cumulative verified points. A weekly badge shows points earned in the last 7 days.</p></div>
@@ -298,6 +331,17 @@
   <div class="section-banner">
     <div class="icon">🏃</div>
     <div><h2>Activities &amp; Enrollments</h2><p>Browse, enrol, submit proof, and earn points</p></div>
+  </div>
+
+  <div class="screenshot-row">
+    <div class="screenshot-wrap">
+      <img src="/help-images/activities.png" alt="Activities list" class="screenshot" />
+      <p>Activities list</p>
+    </div>
+    <div class="screenshot-wrap">
+      <img src="/help-images/submit-proof.png" alt="Submit proof" class="screenshot" />
+      <p>Submitting proof</p>
+    </div>
   </div>
 
   <h3>Browsing Activities</h3>
@@ -353,6 +397,13 @@
   <div class="section-banner">
     <div class="icon">📌</div>
     <div><h2>Bulletin Board</h2><p>Share updates, photos, and connect with your colleagues</p></div>
+  </div>
+
+  <div class="screenshot-row center">
+    <div class="screenshot-wrap">
+      <img src="/help-images/leaderboard.png" alt="Leaderboard" class="screenshot" />
+      <p>Leaderboard</p>
+    </div>
   </div>
 
   <h3>Viewing Posts</h3>
@@ -456,6 +507,13 @@
   <p>Administrators have access to a dedicated admin interface. After logging in, admins are taken to the <strong>Admin Dashboard</strong> instead of the employee view.</p>
   <div class="note"><strong>Admin Navigation:</strong> Dashboard · Health · Manage · Bulletin · Settings</div>
 
+  <div class="screenshot-row center">
+    <div class="screenshot-wrap">
+      <img src="/help-images/admin-dashboard.png" alt="Admin dashboard" class="screenshot" />
+      <p>Admin dashboard</p>
+    </div>
+  </div>
+
   <h3>Admin Dashboard Overview</h3>
   <p>The admin dashboard provides organisation-wide KPIs:</p>
   <table>
@@ -474,6 +532,13 @@
   <div class="section-banner admin-banner">
     <div class="icon">✅</div>
     <div><h2>Verifying Activity Submissions</h2><p>Review and approve or reject employee proof</p></div>
+  </div>
+
+  <div class="screenshot-row center">
+    <div class="screenshot-wrap">
+      <img src="/help-images/admin-verify.png" alt="Verify submissions" class="screenshot" />
+      <p>Verify submissions</p>
+    </div>
   </div>
 
   <p>Tap <strong>Pending</strong> on the dashboard, or go to <strong>Admin → Verify</strong>. Each submission card shows:</p>
@@ -499,6 +564,13 @@
   <div class="section-banner admin-banner">
     <div class="icon">❤️</div>
     <div><h2>Health &amp; Enrollment Management</h2><p>View, edit, and manage employee health data and enrollments</p></div>
+  </div>
+
+  <div class="screenshot-row center">
+    <div class="screenshot-wrap">
+      <img src="/help-images/admin-health.png" alt="Health and Enrolled tabs" class="screenshot" />
+      <p>Health &amp; Enrolled tabs</p>
+    </div>
   </div>
 
   <p>Go to <strong>Health</strong> in the admin nav. This page has two tabs:</p>
