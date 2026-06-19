@@ -3,7 +3,7 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useAction, useQuery, useMutation } from "convex/react";
 import { api } from "../../../../convex/_generated/api";
-import { LogOut, Shield, ChevronRight, Users, Settings, ClipboardList, Database, Upload, X, Check, AlertCircle, Copy, Download, Search, Trash2, CheckSquare, Square } from "lucide-react";
+import { LogOut, Shield, ChevronRight, Users, Settings, ClipboardList, Database, Upload, X, Check, AlertCircle, Copy, Download, Search, Trash2, CheckSquare, Square, UserPlus } from "lucide-react";
 import { AdminBottomNav } from "@/components/BottomNav";
 
 export default function AdminSettingsPage() {
@@ -42,12 +42,35 @@ export default function AdminSettingsPage() {
     const [bulkDeleting, setBulkDeleting] = useState(false);
     const [showBulkDeleteConfirm, setShowBulkDeleteConfirm] = useState(false);
 
+    // Add New User states
+    const [showAddUser, setShowAddUser] = useState(false);
+    const [addUserEmail, setAddUserEmail] = useState("");
+    const [addingUser, setAddingUser] = useState(false);
+    const [addUserResult, setAddUserResult] = useState<any>(null);
+
     // Administrative reset password states
     const [adminResetPassword, setAdminResetPassword] = useState("");
     const [adminResetForceChange, setAdminResetForceChange] = useState(true);
     const [adminResetPasswordProcessing, setAdminResetPasswordProcessing] = useState(false);
 
     const batchInvite = useAction(api.auth.batchInviteEmployees);
+
+    const handleAddUser = async () => {
+        if (!auth || !addUserEmail.trim()) return;
+        setAddingUser(true);
+        try {
+            const res = await fetch("/api/auth/invite", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ email: addUserEmail.trim(), adminToken: auth.token }),
+            });
+            const data = await res.json();
+            setAddUserResult(data);
+            if (data.success) setAddUserEmail("");
+        } finally {
+            setAddingUser(false);
+        }
+    };
     const allUsers = useQuery(api.users.getAllUsers) || [];
     const businessUnits = useQuery(api.config.getBusinessUnits) || [];
     const adminUpdateUser = useMutation(api.users.superAdminUpdateUser);
@@ -347,7 +370,13 @@ export default function AdminSettingsPage() {
             <header className="top-bar admin">
                 <div style={{ width: 24 }} />
                 <h1 className="top-bar-title" style={{ color: "var(--color-admin-text)" }}>Settings</h1>
-                <div style={{ width: 24 }} />
+                {activeTab === "roles" ? (
+                    <button className="btn btn-primary btn-sm" onClick={() => { setShowAddUser(true); setAddUserResult(null); }} id="add-user-btn">
+                        <UserPlus size={16} /> Add User
+                    </button>
+                ) : (
+                    <div style={{ width: 24 }} />
+                )}
             </header>
 
             <main className="admin-content">
@@ -932,6 +961,47 @@ export default function AdminSettingsPage() {
                                 </div>
                             </div>
                         )}
+                    </div>
+                </div>
+            )}
+
+            {/* Add New User Modal */}
+            {showAddUser && (
+                <div className="modal-overlay" onClick={() => { setShowAddUser(false); setAddUserResult(null); }}>
+                    <div className="modal-sheet admin" onClick={(e) => e.stopPropagation()}>
+                        <div className="modal-handle" style={{ background: "var(--color-admin-border)" }} />
+                        <h2 className="modal-title admin">Add New User</h2>
+                        <p style={{ fontSize: 14, color: "var(--color-admin-text-muted)", marginBottom: "var(--spacing-lg)" }}>
+                            Enter the employee's email address. They will receive a temporary password to set up their account.
+                        </p>
+                        {addUserResult?.success && (
+                            <div className="alert alert-success">
+                                <p>✅ Account created!</p>
+                                <p style={{ marginTop: 4, fontSize: 13 }}>Temporary password: <strong style={{ fontFamily: "monospace" }}>{addUserResult.tempPassword}</strong></p>
+                                <p style={{ marginTop: 4, fontSize: 12 }}>Share this securely with the employee.</p>
+                            </div>
+                        )}
+                        {addUserResult?.error && <div className="alert alert-error">{addUserResult.error}</div>}
+                        <div className="input-group">
+                            <label className="input-label admin">Email Address</label>
+                            <input
+                                className="input admin"
+                                type="email"
+                                value={addUserEmail}
+                                onChange={(e) => setAddUserEmail(e.target.value)}
+                                placeholder="employee@heritage.com"
+                                id="add-user-email"
+                                onKeyDown={(e) => { if (e.key === "Enter") handleAddUser(); }}
+                            />
+                        </div>
+                        <button
+                            className="btn btn-primary btn-full btn-lg"
+                            onClick={handleAddUser}
+                            disabled={!addUserEmail.trim() || addingUser}
+                            id="confirm-add-user-btn"
+                        >
+                            {addingUser ? "Creating…" : "Create Account"}
+                        </button>
                     </div>
                 </div>
             )}
