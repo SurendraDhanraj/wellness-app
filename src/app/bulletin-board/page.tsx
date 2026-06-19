@@ -273,8 +273,9 @@ export default function BulletinBoardPage() {
                 ) : (
                     filteredMessages.map((m: any) => {
                         const hasLiked = m.likes?.includes(auth?.id);
+                        const isCensored = m.isCensored === true;
                         return (
-                            <div key={m._id} className="card" style={{ marginBottom: "var(--spacing-sm)", borderTop: activeTab === "announcements" ? "3px solid var(--color-primary)" : "none" }}>
+                            <div key={m._id} className="card" style={{ marginBottom: "var(--spacing-sm)", borderTop: activeTab === "announcements" ? "3px solid var(--color-primary)" : "none", opacity: isCensored ? 0.6 : 1 }}>
                                 {/* Header with post category indicator */}
                                 <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 10 }}>
                                     <div className="avatar-placeholder" style={{ width: 38, height: 38, fontSize: 14 }}>{(m.user?.firstName || "?")[0]}</div>
@@ -295,9 +296,9 @@ export default function BulletinBoardPage() {
                                 </div>
 
                                 {/* Content */}
-                                <p style={{ fontSize: 14, lineHeight: 1.6, color: "var(--color-text-primary)", marginBottom: 10, whiteSpace: "pre-line" }}>{m.content}</p>
+                                <p style={{ fontSize: 14, lineHeight: 1.6, color: isCensored ? "var(--color-text-muted)" : "var(--color-text-primary)", marginBottom: 10, whiteSpace: "pre-line", fontStyle: isCensored ? "italic" : "normal" }}>{m.content}</p>
                                 
-                                {m.mediaUrl && (
+                                {m.mediaUrl && !isCensored && (
                                     <img 
                                         src={m.mediaUrl} 
                                         alt="Attachment" 
@@ -308,14 +309,14 @@ export default function BulletinBoardPage() {
                                 {/* Card Actions */}
                                 <div style={{ display: "flex", gap: "var(--spacing-md)", borderTop: "1px solid var(--color-border)", paddingTop: 10 }}>
                                     <button 
-                                        onClick={() => auth && toggleLike({ messageId: m._id, userId: auth.id })} 
-                                        style={{ display: "flex", alignItems: "center", gap: 4, background: "none", border: "none", cursor: "pointer", fontSize: 13, color: hasLiked ? "var(--color-primary)" : "var(--color-text-secondary)", fontWeight: hasLiked ? 600 : 400 }}
+                                        onClick={() => auth && !isCensored && toggleLike({ messageId: m._id, userId: auth.id })} 
+                                        style={{ display: "flex", alignItems: "center", gap: 4, background: "none", border: "none", cursor: isCensored ? "default" : "pointer", fontSize: 13, color: hasLiked ? "var(--color-primary)" : "var(--color-text-secondary)", fontWeight: hasLiked ? 600 : 400 }}
                                     >
                                         <Heart size={16} fill={hasLiked ? "var(--color-primary)" : "none"} /> {m.likes?.length ?? 0}
                                     </button>
                                     <button 
-                                        onClick={() => setSelectedPost(m)}
-                                        style={{ display: "flex", alignItems: "center", gap: 4, background: "none", border: "none", cursor: "pointer", fontSize: 13, color: "var(--color-text-secondary)" }}
+                                        onClick={() => !isCensored && setSelectedPost(m)}
+                                        style={{ display: "flex", alignItems: "center", gap: 4, background: "none", border: "none", cursor: isCensored ? "default" : "pointer", fontSize: 13, color: "var(--color-text-secondary)" }}
                                         id={`reply-btn-${m._id}`}
                                     >
                                         <MessageSquare size={16} /> {m.replyCount ?? 0} {activeTab === "q&a" ? "Answers" : "Comments"}

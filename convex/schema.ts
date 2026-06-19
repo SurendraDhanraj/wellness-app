@@ -113,6 +113,8 @@ export default defineSchema({
     likes: v.array(v.id("users")),
     isPinned: v.boolean(),
     createdAt: v.number(),
+    isDeleted: v.optional(v.boolean()),
+    isCensored: v.optional(v.boolean()),
   })
     .index("by_group", ["group"])
     .index("by_parent", ["parentId"]),
