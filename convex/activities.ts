@@ -276,3 +276,22 @@ export const getAllEnrollmentsAdmin = query({
         return result;
     },
 });
+
+// Admin: delete a single enrollment
+export const deleteEnrollment = mutation({
+    args: { enrollmentId: v.id("enrollments") },
+    handler: async (ctx, args) => {
+        await ctx.db.delete(args.enrollmentId);
+    },
+});
+
+// Admin: delete multiple enrollments by ID array
+export const deleteEnrollments = mutation({
+    args: { enrollmentIds: v.array(v.id("enrollments")) },
+    handler: async (ctx, args) => {
+        for (const id of args.enrollmentIds) {
+            await ctx.db.delete(id);
+        }
+        return { deleted: args.enrollmentIds.length };
+    },
+});
