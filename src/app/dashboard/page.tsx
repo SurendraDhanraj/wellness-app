@@ -128,100 +128,113 @@ export default function DashboardPage() {
                     </div>
                 </div>
 
-                {/* Health metrics quick view */}
-                {latestMetric && (
-                    <>
-                        <div className="section-header">
-                            <h2 className="section-title">Weekly Progress</h2>
-                            <button className="section-link" onClick={() => router.push("/health")}>View History</button>
+
+                {/* Health metrics quick view — always visible */}
+                <>
+                    <div className="section-header">
+                        <h2 className="section-title">Weekly Progress</h2>
+                        <button className="section-link" onClick={() => router.push("/health")}>
+                            {latestMetric ? "View History" : "Log data"}
+                        </button>
+                    </div>
+
+                    {!latestMetric && (
+                        <div className="card" style={{ textAlign: "center", padding: "var(--spacing-md)", marginBottom: "var(--spacing-md)", border: "1.5px dashed var(--color-border)" }}>
+                            <p style={{ fontSize: 13, color: "var(--color-text-secondary)", marginBottom: 8 }}>No health data logged yet.</p>
+                            <button
+                                className="btn-primary"
+                                style={{ fontSize: 13, padding: "8px 20px" }}
+                                onClick={() => router.push("/health")}
+                                id="log-health-cta"
+                            >
+                                + Log today's data
+                            </button>
                         </div>
-                        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "var(--spacing-sm)", marginBottom: "var(--spacing-md)" }}>
-                            {/* Weight */}
-                            <div className="card">
-                                <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 4 }}>
-                                    <TrendingUp size={14} color="var(--color-text-secondary)" />
-                                    <span style={{ fontSize: 12, color: "var(--color-text-secondary)" }}>Weight</span>
-                                </div>
-                                <p style={{ fontSize: 22, fontWeight: 700 }}>{latestMetric.weight ?? "—"}<span style={{ fontSize: 12, fontWeight: 400, color: "var(--color-text-secondary)", marginLeft: 3 }}>{latestMetric.weightUnit ?? "kg"}</span></p>
-                                {weightDiff && <span className={`kpi-trend ${parseFloat(weightDiff) < 0 ? "up" : "down"}`}>{parseFloat(weightDiff) < 0 ? "↓" : "↑"} {Math.abs(parseFloat(weightDiff))}%</span>}
-                            </div>
+                    )}
 
-                            {/* BMI with colour-graded bar */}
-                            <div className="card">
-                                <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 4 }}>
-                                    <Activity size={14} color="var(--color-text-secondary)" />
-                                    <span style={{ fontSize: 12, color: "var(--color-text-secondary)" }}>BMI</span>
-                                </div>
-                                <p style={{ fontSize: 22, fontWeight: 700 }}>{latestWithBMI?.bmi ?? "—"}</p>
-                                {latestWithBMI?.bmi ? (() => {
-                                    const c = bmiCategory(latestWithBMI.bmi);
-                                    return (
-                                        <>
-                                            {/* Gradient zone track with marker */}
-                                            <div style={{ position: "relative", height: 8, borderRadius: 999, margin: "6px 0 3px", background: BMI_GRADIENT }}>
-                                                {/* Marker line */}
-                                                <div style={{
-                                                    position: "absolute",
-                                                    left: `${c.markerPct}%`,
-                                                    top: -3,
-                                                    transform: "translateX(-50%)",
-                                                    width: 3,
-                                                    height: 14,
-                                                    background: "white",
-                                                    borderRadius: 2,
-                                                    boxShadow: `0 0 0 1.5px ${c.color}`,
-                                                }} />
-                                            </div>
-                                            <span style={{ fontSize: 10, color: c.color, fontWeight: 600 }}>{c.label}</span>
-                                        </>
-                                    );
-                                })() : <span style={{ fontSize: 10, color: "var(--color-text-muted)" }}>Log weight</span>}
+                    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "var(--spacing-sm)", marginBottom: "var(--spacing-md)" }}>
+                        {/* Weight */}
+                        <div className="card">
+                            <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 4 }}>
+                                <TrendingUp size={14} color="var(--color-text-secondary)" />
+                                <span style={{ fontSize: 12, color: "var(--color-text-secondary)" }}>Weight</span>
                             </div>
-
-                            {/* Blood Pressure with colour-graded bar */}
-                            <div className="card">
-                                <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 4 }}>
-                                    <Heart size={14} color="var(--color-error)" />
-                                    <span style={{ fontSize: 12, color: "var(--color-text-secondary)" }}>Blood Pressure</span>
-                                </div>
-                                <p style={{ fontSize: 18, fontWeight: 700 }}>{latestWithBP?.bloodPressureSystolic ?? "—"}<span style={{ fontSize: 13, fontWeight: 400 }}>/{latestWithBP?.bloodPressureDiastolic ?? "—"}</span></p>
-                                {latestWithBP?.bloodPressureSystolic ? (() => {
-                                    const c = bpCategory(latestWithBP.bloodPressureSystolic);
-                                    return (
-                                        <>
-                                            {/* Gradient zone track with marker */}
-                                            <div style={{ position: "relative", height: 8, borderRadius: 999, margin: "6px 0 3px", background: BP_GRADIENT }}>
-                                                {/* Marker line */}
-                                                <div style={{
-                                                    position: "absolute",
-                                                    left: `${c.markerPct}%`,
-                                                    top: -3,
-                                                    transform: "translateX(-50%)",
-                                                    width: 3,
-                                                    height: 14,
-                                                    background: "white",
-                                                    borderRadius: 2,
-                                                    boxShadow: `0 0 0 1.5px ${c.color}`,
-                                                }} />
-                                            </div>
-                                            <span style={{ fontSize: 10, color: c.color, fontWeight: 600 }}>{c.label}</span>
-                                        </>
-                                    );
-                                })() : <span style={{ fontSize: 10, color: "var(--color-text-muted)" }}>mmHg</span>}
-                            </div>
-
-                            {/* Steps */}
-                            <div className="card">
-                                <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 4 }}>
-                                    <Footprints size={14} color="var(--color-secondary)" />
-                                    <span style={{ fontSize: 12, color: "var(--color-text-secondary)" }}>Steps</span>
-                                </div>
-                                <p style={{ fontSize: 22, fontWeight: 700 }}>{latestMetric.steps?.toLocaleString() ?? "—"}</p>
-                                <span style={{ fontSize: 10, color: "var(--color-text-muted)" }}>today</span>
-                            </div>
+                            <p style={{ fontSize: 22, fontWeight: 700 }}>{latestMetric?.weight ?? "—"}<span style={{ fontSize: 12, fontWeight: 400, color: "var(--color-text-secondary)", marginLeft: 3 }}>{latestMetric?.weightUnit ?? "kg"}</span></p>
+                            {weightDiff && <span className={`kpi-trend ${parseFloat(weightDiff) < 0 ? "up" : "down"}`}>{parseFloat(weightDiff) < 0 ? "↓" : "↑"} {Math.abs(parseFloat(weightDiff))}%</span>}
+                            {!latestMetric && <span style={{ fontSize: 10, color: "var(--color-text-muted)" }}>Not logged</span>}
                         </div>
-                    </>
-                )}
+
+                        {/* BMI with colour-graded bar */}
+                        <div className="card">
+                            <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 4 }}>
+                                <Activity size={14} color="var(--color-text-secondary)" />
+                                <span style={{ fontSize: 12, color: "var(--color-text-secondary)" }}>BMI</span>
+                            </div>
+                            <p style={{ fontSize: 22, fontWeight: 700 }}>{latestWithBMI?.bmi ?? "—"}</p>
+                            {latestWithBMI?.bmi ? (() => {
+                                const c = bmiCategory(latestWithBMI.bmi);
+                                return (
+                                    <>
+                                        <div style={{ position: "relative", height: 8, borderRadius: 999, margin: "6px 0 3px", background: BMI_GRADIENT }}>
+                                            <div style={{
+                                                position: "absolute",
+                                                left: `${c.markerPct}%`,
+                                                top: -3,
+                                                transform: "translateX(-50%)",
+                                                width: 3,
+                                                height: 14,
+                                                background: "white",
+                                                borderRadius: 2,
+                                                boxShadow: `0 0 0 1.5px ${c.color}`,
+                                            }} />
+                                        </div>
+                                        <span style={{ fontSize: 10, color: c.color, fontWeight: 600 }}>{c.label}</span>
+                                    </>
+                                );
+                            })() : <span style={{ fontSize: 10, color: "var(--color-text-muted)" }}>Not logged</span>}
+                        </div>
+
+                        {/* Blood Pressure with colour-graded bar */}
+                        <div className="card">
+                            <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 4 }}>
+                                <Heart size={14} color="var(--color-error)" />
+                                <span style={{ fontSize: 12, color: "var(--color-text-secondary)" }}>Blood Pressure</span>
+                            </div>
+                            <p style={{ fontSize: 18, fontWeight: 700 }}>{latestWithBP?.bloodPressureSystolic ?? "—"}<span style={{ fontSize: 13, fontWeight: 400 }}>/{latestWithBP?.bloodPressureDiastolic ?? "—"}</span></p>
+                            {latestWithBP?.bloodPressureSystolic ? (() => {
+                                const c = bpCategory(latestWithBP.bloodPressureSystolic);
+                                return (
+                                    <>
+                                        <div style={{ position: "relative", height: 8, borderRadius: 999, margin: "6px 0 3px", background: BP_GRADIENT }}>
+                                            <div style={{
+                                                position: "absolute",
+                                                left: `${c.markerPct}%`,
+                                                top: -3,
+                                                transform: "translateX(-50%)",
+                                                width: 3,
+                                                height: 14,
+                                                background: "white",
+                                                borderRadius: 2,
+                                                boxShadow: `0 0 0 1.5px ${c.color}`,
+                                            }} />
+                                        </div>
+                                        <span style={{ fontSize: 10, color: c.color, fontWeight: 600 }}>{c.label}</span>
+                                    </>
+                                );
+                            })() : <span style={{ fontSize: 10, color: "var(--color-text-muted)" }}>Not logged</span>}
+                        </div>
+
+                        {/* Steps */}
+                        <div className="card">
+                            <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 4 }}>
+                                <Footprints size={14} color="var(--color-secondary)" />
+                                <span style={{ fontSize: 12, color: "var(--color-text-secondary)" }}>Steps</span>
+                            </div>
+                            <p style={{ fontSize: 22, fontWeight: 700 }}>{latestMetric?.steps?.toLocaleString() ?? "—"}</p>
+                            <span style={{ fontSize: 10, color: "var(--color-text-muted)" }}>{latestMetric ? "today" : "Not logged"}</span>
+                        </div>
+                    </div>
+                </>
 
 
                 {/* Enrolled activities */}
