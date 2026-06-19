@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useQuery } from "convex/react";
 import { api } from "../../../convex/_generated/api";
-import { Bell, Star, BarChart2, Activity, TrendingUp, ChevronRight, Plus, Heart, Footprints } from "lucide-react";
+import { Bell, Star, BarChart2, Gauge, Ruler, ChevronRight, Plus, Heart, Footprints } from "lucide-react";
 import { EmployeeBottomNav } from "@/components/BottomNav";
 
 export default function DashboardPage() {
@@ -158,7 +158,7 @@ export default function DashboardPage() {
                         {/* Weight */}
                         <div className="card">
                             <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 4 }}>
-                                <TrendingUp size={14} color="var(--color-text-secondary)" />
+                                <Ruler size={14} color="var(--color-text-secondary)" />
                                 <span style={{ fontSize: 12, color: "var(--color-text-secondary)" }}>Weight</span>
                             </div>
                             <p style={{ fontSize: 22, fontWeight: 700 }}>{latestMetric?.weight ?? "—"}<span style={{ fontSize: 12, fontWeight: 400, color: "var(--color-text-secondary)", marginLeft: 3 }}>{latestMetric?.weightUnit ?? "kg"}</span></p>
@@ -169,7 +169,7 @@ export default function DashboardPage() {
                         {/* BMI with colour-graded bar */}
                         <div className="card">
                             <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 4 }}>
-                                <Activity size={14} color="var(--color-text-secondary)" />
+                                <Gauge size={14} color="var(--color-text-secondary)" />
                                 <span style={{ fontSize: 12, color: "var(--color-text-secondary)" }}>BMI</span>
                             </div>
                             <p style={{ fontSize: 22, fontWeight: 700 }}>{latestWithBMI?.bmi ?? "—"}</p>
