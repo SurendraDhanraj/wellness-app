@@ -1,9 +1,9 @@
 "use client";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { useQuery, useMutation } from "convex/react";
 import { api } from "../../../convex/_generated/api";
-import { Bell, Heart, MessageSquare, Share2, Send, X, Pin, HelpCircle, Image as ImageIcon, Check, Search, ImageOff } from "lucide-react";
+import { Bell, Heart, MessageSquare, Share2, Send, X, Pin, HelpCircle, Image as ImageIcon, Search, ImageOff } from "lucide-react";
 import { EmployeeBottomNav } from "@/components/BottomNav";
 import { format } from "date-fns";
 
@@ -92,13 +92,7 @@ function renderContent(text: string) {
     );
 }
 
-// Sample premium high-resolution wellness/notice photos for quick user selection in local dev!
-const IMAGE_PRESETS = [
-    { name: "Official Announcement", url: "https://images.unsplash.com/photo-1517245386807-bb43f82c33c4?w=500&auto=format&fit=crop&q=60" },
-    { name: "Yoga & Meditation", url: "https://images.unsplash.com/photo-1544367567-0f2fcb009e0b?w=500&auto=format&fit=crop&q=60" },
-    { name: "Group Nature Hike", url: "https://images.unsplash.com/photo-1551632811-561732d1e306?w=500&auto=format&fit=crop&q=60" },
-    { name: "Healthy Diet & Nutrition", url: "https://images.unsplash.com/photo-1498837167922-ddd27525d352?w=500&auto=format&fit=crop&q=60" },
-];
+
 
 export default function BulletinBoardPage() {
     const router = useRouter();
@@ -109,10 +103,11 @@ export default function BulletinBoardPage() {
 
     // Post composer states
     const [content, setContent] = useState("");
-    const [selectedPhotoPreset, setSelectedPhotoPreset] = useState<string | null>(null);
-    const [customPhotoUrl, setCustomPhotoUrl] = useState("");
-    const [showPhotoSelector, setShowPhotoSelector] = useState(false);
+    const [attachedFile, setAttachedFile] = useState<File | null>(null);
+    const [attachedPreviewUrl, setAttachedPreviewUrl] = useState<string | null>(null);
+    const [uploading, setUploading] = useState(false);
     const [posting, setPosting] = useState(false);
+    const fileInputRef = useRef<HTMLInputElement>(null);
 
     // Thread/Comment States
     const [selectedPost, setSelectedPost] = useState<any>(null);
@@ -134,6 +129,7 @@ export default function BulletinBoardPage() {
     
     const postMessage = useMutation(api.messages.postMessage);
     const toggleLike = useMutation(api.messages.toggleLike);
+    const generateUploadUrl = useMutation(api.messages.generateUploadUrl);
 
     // Filter messages based on search query (searching content, first name, or surname)
     const filteredMessages = messages.filter((m: any) => {
@@ -144,28 +140,60 @@ export default function BulletinBoardPage() {
         return contentMatch || nameMatch;
     });
 
+    const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+        setAttachedFile(file);
+        // Revoke old preview URL to avoid memory leaks
+        if (attachedPreviewUrl) URL.revokeObjectURL(attachedPreviewUrl);
+        setAttachedPreviewUrl(URL.createObjectURL(file));
+        // Reset input so the same file can be reselected after removal
+        e.target.value = "";
+    };
+
+    const handleRemoveAttachment = () => {
+        if (attachedPreviewUrl) URL.revokeObjectURL(attachedPreviewUrl);
+        setAttachedFile(null);
+        setAttachedPreviewUrl(null);
+    };
+
     const handleCreatePost = async (e: React.FormEvent) => {
         e.preventDefault();
         if (!auth || !content.trim() || posting) return;
         setPosting(true);
+        let mediaUrl: string | undefined;
         try {
-            // Determine active attached photo (preset or custom URL)
-            const attachedMedia = customPhotoUrl.trim() || selectedPhotoPreset || undefined;
+            if (attachedFile) {
+                setUploading(true);
+                // 1. Get a short-lived upload URL from Convex
+                const uploadUrl = await generateUploadUrl({});
+                // 2. POST the file directly to Convex Storage
+                const res = await fetch(uploadUrl, {
+                    method: "POST",
+                    headers: { "Content-Type": attachedFile.type },
+                    body: attachedFile,
+                });
+                const { storageId } = await res.json();
+                // 3. Resolve storageId to a permanent public URL via the Convex HTTP endpoint
+                // Convex exposes storage files at: <convexSiteUrl>/api/storage/<storageId>
+                const convexSiteUrl = process.env.NEXT_PUBLIC_CONVEX_URL?.replace(".cloud", ".site") ?? "";
+                mediaUrl = `${convexSiteUrl}/api/storage/${storageId}`;
+                setUploading(false);
+            }
 
             await postMessage({
                 userId: auth.id,
                 content: content.trim(),
                 group: activeTab,
-                mediaUrl: attachedMedia,
+                mediaUrl,
             });
 
             // Reset composer
             setContent("");
-            setSelectedPhotoPreset(null);
-            setCustomPhotoUrl("");
-            setShowPhotoSelector(false);
+            handleRemoveAttachment();
         } catch (err) {
             console.error("Failed to post:", err);
+            setUploading(false);
         } finally {
             setPosting(false);
         }
@@ -245,75 +273,61 @@ export default function BulletinBoardPage() {
                         />
                     </div>
 
-                    {/* Pre-selected Attached Media Preview */}
-                    {(selectedPhotoPreset || customPhotoUrl) && (
+                    {/* Attached File Preview */}
+                    {attachedPreviewUrl && (
                         <div style={{ position: "relative", marginTop: 8, borderRadius: "var(--radius-md)", overflow: "hidden", border: "1px solid var(--color-border)" }}>
-                            <img 
-                                src={customPhotoUrl.trim() || selectedPhotoPreset || ""} 
-                                alt="Attachment Preview" 
-                                style={{ width: "100%", maxHeight: 160, objectFit: "cover", display: "block" }} 
+                            <img
+                                src={attachedPreviewUrl}
+                                alt="Attachment Preview"
+                                style={{ width: "100%", maxHeight: 160, objectFit: "cover", display: "block" }}
                             />
-                            <button 
-                                onClick={() => { setSelectedPhotoPreset(null); setCustomPhotoUrl(""); }}
-                                style={{ position: "absolute", top: 8, right: 8, background: "rgba(0,0,0,0.6)", border: "none", color: "white", padding: 4, borderRadius: "50%", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}
-                            >
-                                <X size={16} />
-                            </button>
+                            {uploading && (
+                                <div style={{ position: "absolute", inset: 0, background: "rgba(0,0,0,0.45)", display: "flex", alignItems: "center", justifyContent: "center", flexDirection: "column", gap: 8 }}>
+                                    <div style={{ width: 28, height: 28, border: "3px solid rgba(255,255,255,0.3)", borderTopColor: "white", borderRadius: "50%", animation: "spin 0.8s linear infinite" }} />
+                                    <span style={{ color: "white", fontSize: 11, fontWeight: 600 }}>Uploading…</span>
+                                </div>
+                            )}
+                            {!uploading && (
+                                <button
+                                    onClick={handleRemoveAttachment}
+                                    style={{ position: "absolute", top: 8, right: 8, background: "rgba(0,0,0,0.6)", border: "none", color: "white", padding: 4, borderRadius: "50%", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}
+                                >
+                                    <X size={16} />
+                                </button>
+                            )}
                         </div>
                     )}
 
-                    {/* Action buttons & photo selector */}
+                    {/* Action buttons */}
                     <div style={{ marginTop: 8, paddingTop: 8, borderTop: "1px solid var(--color-border)" }}>
                         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                            <button 
+                            {/* Hidden native file input */}
+                            <input
+                                ref={fileInputRef}
+                                type="file"
+                                accept="image/*"
+                                style={{ display: "none" }}
+                                onChange={handleFileChange}
+                                id="bulletin-file-input"
+                            />
+                            <button
                                 type="button"
                                 className="btn btn-secondary btn-sm"
                                 style={{ display: "flex", alignItems: "center", gap: 6, border: "1px solid var(--color-border)", background: "var(--color-surface)" }}
-                                onClick={() => setShowPhotoSelector(!showPhotoSelector)}
+                                onClick={() => fileInputRef.current?.click()}
                             >
-                                <ImageIcon size={14} /> Add Media
+                                <ImageIcon size={14} />
+                                {attachedFile ? attachedFile.name.length > 20 ? attachedFile.name.slice(0, 18) + "…" : attachedFile.name : "Add Photo"}
                             </button>
-                            <button 
-                                className="btn btn-primary btn-sm" 
-                                onClick={handleCreatePost} 
-                                disabled={!content.trim() || posting} 
+                            <button
+                                className="btn btn-primary btn-sm"
+                                onClick={handleCreatePost}
+                                disabled={!content.trim() || posting}
                                 id="bulletin-post-btn"
                             >
-                                <Send size={14} /> {posting ? "Posting…" : "Post"}
+                                <Send size={14} /> {posting ? (uploading ? "Uploading…" : "Posting…") : "Post"}
                             </button>
                         </div>
-
-                        {/* Interactive Photo Selection Tray */}
-                        {showPhotoSelector && (
-                            <div style={{ marginTop: 12, borderTop: "1px dashed var(--color-border)", paddingTop: 12 }}>
-                                <p style={{ fontSize: 11, fontWeight: 700, color: "var(--color-text-secondary)", marginBottom: 8, textTransform: "uppercase", letterSpacing: 0.5 }}>Select Template Image</p>
-                                <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 6, marginBottom: 10 }}>
-                                    {IMAGE_PRESETS.map((img) => (
-                                        <div 
-                                            key={img.url}
-                                            onClick={() => { setSelectedPhotoPreset(img.url); setCustomPhotoUrl(""); }}
-                                            style={{ position: "relative", aspectRatio: "4/3", borderRadius: 6, overflow: "hidden", cursor: "pointer", border: selectedPhotoPreset === img.url ? "2.5px solid var(--color-primary)" : "1px solid var(--color-border)" }}
-                                        >
-                                            <img src={img.url} alt={img.name} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
-                                            {selectedPhotoPreset === img.url && (
-                                                <div style={{ position: "absolute", inset: 0, background: "rgba(192, 36, 76, 0.2)", display: "flex", alignItems: "center", justifyContent: "center" }}>
-                                                    <Check size={16} color="white" strokeWidth={3} />
-                                                </div>
-                                            )}
-                                        </div>
-                                    ))}
-                                </div>
-                                <div className="input-group" style={{ margin: 0 }}>
-                                    <input 
-                                        className="input" 
-                                        style={{ fontSize: 12, padding: "8px 10px", margin: 0 }}
-                                        placeholder="Or paste public Image URL..."
-                                        value={customPhotoUrl}
-                                        onChange={(e) => { setCustomPhotoUrl(e.target.value); setSelectedPhotoPreset(null); }}
-                                    />
-                                </div>
-                            </div>
-                        )}
                     </div>
                 </div>
 

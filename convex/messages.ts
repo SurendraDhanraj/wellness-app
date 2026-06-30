@@ -114,3 +114,20 @@ export const censorMessage = mutation({
         });
     },
 });
+
+// Returns a short-lived pre-signed URL the client can POST a file to
+export const generateUploadUrl = mutation({
+    args: {},
+    handler: async (ctx) => {
+        return await ctx.storage.generateUploadUrl();
+    },
+});
+
+// Resolves a Convex storageId to its public URL
+export const getMediaUrl = query({
+    args: { storageId: v.string() },
+    handler: async (ctx, args) => {
+        return await ctx.storage.getUrl(args.storageId as any);
+    },
+});
+
