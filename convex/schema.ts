@@ -108,6 +108,7 @@ export default defineSchema({
     content: v.string(),
     mediaStorageId: v.optional(v.string()),
     mediaUrl: v.optional(v.string()),
+    mediaType: v.optional(v.union(v.literal("image"), v.literal("video"), v.literal("pdf"))),
     group: v.string(), // "trending", "myteam", or custom tags
     parentId: v.optional(v.id("messages")),
     likes: v.array(v.id("users")),

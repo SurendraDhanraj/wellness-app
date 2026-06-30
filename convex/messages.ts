@@ -45,6 +45,7 @@ export const postMessage = mutation({
         content: v.string(),
         group: v.string(),
         mediaUrl: v.optional(v.string()),
+        mediaType: v.optional(v.union(v.literal("image"), v.literal("video"), v.literal("pdf"))),
         parentId: v.optional(v.id("messages")),
     },
     handler: async (ctx, args) => {

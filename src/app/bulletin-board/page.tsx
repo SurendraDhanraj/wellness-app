@@ -3,21 +3,75 @@ import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { useQuery, useMutation } from "convex/react";
 import { api } from "../../../convex/_generated/api";
-import { Bell, Heart, MessageSquare, Share2, Send, X, Pin, HelpCircle, Image as ImageIcon, Search, ImageOff } from "lucide-react";
+import { Bell, Heart, MessageSquare, Share2, Send, X, Pin, HelpCircle, Image as ImageIcon, Search, ImageOff, FileText, Paperclip, Play } from "lucide-react";
 import { EmployeeBottomNav } from "@/components/BottomNav";
 import { format } from "date-fns";
 
-// Resilient image component: shows a skeleton while loading, a fallback on error
-function PostImage({ src, style }: { src: string; style?: React.CSSProperties }) {
-    const [status, setStatus] = useState<"loading" | "loaded" | "error">("loading");
+type MediaType = "image" | "video" | "pdf";
 
-    // Reset state whenever src changes (e.g. navigating between posts)
-    useEffect(() => { setStatus("loading"); }, [src]);
+// Detects media type from a MIME type string
+function getMediaType(mimeType: string): MediaType {
+    if (mimeType.startsWith("video/")) return "video";
+    if (mimeType === "application/pdf") return "pdf";
+    return "image";
+}
 
+// Unified media renderer for image, video and PDF attachments
+function PostMedia({ src, mediaType, style }: { src: string; mediaType?: MediaType; style?: React.CSSProperties }) {
+    const [imgStatus, setImgStatus] = useState<"loading" | "loaded" | "error">("loading");
+    useEffect(() => { setImgStatus("loading"); }, [src]);
+
+    const type = mediaType ?? "image";
+
+    if (type === "video") {
+        return (
+            <div style={{ borderRadius: "var(--radius-md)", overflow: "hidden", background: "#000", ...style }}>
+                <video
+                    src={src}
+                    controls
+                    playsInline
+                    preload="metadata"
+                    style={{ width: "100%", maxHeight: 240, display: "block", borderRadius: "inherit" }}
+                />
+            </div>
+        );
+    }
+
+    if (type === "pdf") {
+        return (
+            <a
+                href={src}
+                target="_blank"
+                rel="noopener noreferrer"
+                onClick={(e) => e.stopPropagation()}
+                style={{
+                    display: "flex", alignItems: "center", gap: 10,
+                    padding: "12px 14px",
+                    background: "var(--color-surface)",
+                    border: "1px solid var(--color-border)",
+                    borderRadius: "var(--radius-md)",
+                    textDecoration: "none",
+                    color: "var(--color-text-primary)",
+                    marginBottom: 10,
+                    ...style,
+                }}
+            >
+                <div style={{ width: 36, height: 36, background: "#e53e3e", borderRadius: 6, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                    <FileText size={18} color="white" />
+                </div>
+                <div style={{ flex: 1, minWidth: 0 }}>
+                    <p style={{ fontSize: 13, fontWeight: 600, marginBottom: 2, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>PDF Document</p>
+                    <p style={{ fontSize: 11, color: "var(--color-text-secondary)" }}>Tap to open</p>
+                </div>
+                <Paperclip size={14} color="var(--color-text-muted)" />
+            </a>
+        );
+    }
+
+    // Default: image
     return (
         <div style={{ position: "relative", ...style }}>
-            {/* Skeleton shown while loading */}
-            {status === "loading" && (
+            {imgStatus === "loading" && (
                 <div style={{
                     position: "absolute", inset: 0,
                     background: "linear-gradient(90deg, var(--color-border) 25%, var(--color-surface) 50%, var(--color-border) 75%)",
@@ -26,9 +80,7 @@ function PostImage({ src, style }: { src: string; style?: React.CSSProperties })
                     borderRadius: "inherit",
                 }} />
             )}
-
-            {/* Error fallback */}
-            {status === "error" && (
+            {imgStatus === "error" && (
                 <div style={{
                     display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center",
                     gap: 6, padding: "20px 16px",
@@ -42,18 +94,16 @@ function PostImage({ src, style }: { src: string; style?: React.CSSProperties })
                     <span style={{ fontSize: 11 }}>Image couldn't load</span>
                 </div>
             )}
-
-            {/* Actual image — always mounted so onLoad/onError fire */}
             <img
                 src={src}
                 alt="Post attachment"
                 loading="lazy"
                 crossOrigin="anonymous"
-                onLoad={() => setStatus("loaded")}
-                onError={() => setStatus("error")}
+                onLoad={() => setImgStatus("loaded")}
+                onError={() => setImgStatus("error")}
                 style={{
-                    display: status === "error" ? "none" : "block",
-                    opacity: status === "loaded" ? 1 : 0,
+                    display: imgStatus === "error" ? "none" : "block",
+                    opacity: imgStatus === "loaded" ? 1 : 0,
                     transition: "opacity 0.3s ease",
                     width: "100%",
                     height: "100%",
@@ -104,10 +154,12 @@ export default function BulletinBoardPage() {
     // Post composer states
     const [content, setContent] = useState("");
     const [attachedFile, setAttachedFile] = useState<File | null>(null);
+    const [attachedMediaType, setAttachedMediaType] = useState<MediaType>("image");
     const [attachedPreviewUrl, setAttachedPreviewUrl] = useState<string | null>(null);
     const [uploading, setUploading] = useState(false);
     const [posting, setPosting] = useState(false);
     const fileInputRef = useRef<HTMLInputElement>(null);
+    const [uploadError, setUploadError] = useState<string | null>(null);
 
     // Thread/Comment States
     const [selectedPost, setSelectedPost] = useState<any>(null);
@@ -143,11 +195,19 @@ export default function BulletinBoardPage() {
     const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
         if (!file) return;
+        setUploadError(null);
+
+        // File size limits
+        const mb = file.size / (1024 * 1024);
+        const type = getMediaType(file.type);
+        if (type === "image" && mb > 10) { setUploadError("Images must be under 10 MB."); e.target.value = ""; return; }
+        if (type === "video" && mb > 80) { setUploadError("Videos must be under 80 MB."); e.target.value = ""; return; }
+        if (type === "pdf"  && mb > 20) { setUploadError("PDFs must be under 20 MB.");   e.target.value = ""; return; }
+
         setAttachedFile(file);
-        // Revoke old preview URL to avoid memory leaks
+        setAttachedMediaType(type);
         if (attachedPreviewUrl) URL.revokeObjectURL(attachedPreviewUrl);
         setAttachedPreviewUrl(URL.createObjectURL(file));
-        // Reset input so the same file can be reselected after removal
         e.target.value = "";
     };
 
@@ -155,6 +215,7 @@ export default function BulletinBoardPage() {
         if (attachedPreviewUrl) URL.revokeObjectURL(attachedPreviewUrl);
         setAttachedFile(null);
         setAttachedPreviewUrl(null);
+        setUploadError(null);
     };
 
     const handleCreatePost = async (e: React.FormEvent) => {
@@ -162,22 +223,20 @@ export default function BulletinBoardPage() {
         if (!auth || !content.trim() || posting) return;
         setPosting(true);
         let mediaUrl: string | undefined;
+        let mediaType: MediaType | undefined;
         try {
             if (attachedFile) {
                 setUploading(true);
-                // 1. Get a short-lived upload URL from Convex
                 const uploadUrl = await generateUploadUrl({});
-                // 2. POST the file directly to Convex Storage
                 const res = await fetch(uploadUrl, {
                     method: "POST",
                     headers: { "Content-Type": attachedFile.type },
                     body: attachedFile,
                 });
                 const { storageId } = await res.json();
-                // 3. Resolve storageId to a permanent public URL via the Convex HTTP endpoint
-                // Convex exposes storage files at: <convexSiteUrl>/api/storage/<storageId>
                 const convexSiteUrl = process.env.NEXT_PUBLIC_CONVEX_URL?.replace(".cloud", ".site") ?? "";
                 mediaUrl = `${convexSiteUrl}/api/storage/${storageId}`;
+                mediaType = attachedMediaType;
                 setUploading(false);
             }
 
@@ -186,9 +245,9 @@ export default function BulletinBoardPage() {
                 content: content.trim(),
                 group: activeTab,
                 mediaUrl,
+                mediaType,
             });
 
-            // Reset composer
             setContent("");
             handleRemoveAttachment();
         } catch (err) {
@@ -276,11 +335,21 @@ export default function BulletinBoardPage() {
                     {/* Attached File Preview */}
                     {attachedPreviewUrl && (
                         <div style={{ position: "relative", marginTop: 8, borderRadius: "var(--radius-md)", overflow: "hidden", border: "1px solid var(--color-border)" }}>
-                            <img
-                                src={attachedPreviewUrl}
-                                alt="Attachment Preview"
-                                style={{ width: "100%", maxHeight: 160, objectFit: "cover", display: "block" }}
-                            />
+                            {attachedMediaType === "video" ? (
+                                <video src={attachedPreviewUrl} style={{ width: "100%", maxHeight: 160, display: "block" }} muted />
+                            ) : attachedMediaType === "pdf" ? (
+                                <div style={{ display: "flex", alignItems: "center", gap: 10, padding: "14px 12px", background: "var(--color-surface)" }}>
+                                    <div style={{ width: 36, height: 36, background: "#e53e3e", borderRadius: 6, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                                        <FileText size={18} color="white" />
+                                    </div>
+                                    <div style={{ flex: 1, minWidth: 0 }}>
+                                        <p style={{ fontSize: 13, fontWeight: 600, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{attachedFile?.name}</p>
+                                        <p style={{ fontSize: 11, color: "var(--color-text-secondary)" }}>{((attachedFile?.size ?? 0) / (1024 * 1024)).toFixed(1)} MB</p>
+                                    </div>
+                                </div>
+                            ) : (
+                                <img src={attachedPreviewUrl} alt="Attachment Preview" style={{ width: "100%", maxHeight: 160, objectFit: "cover", display: "block" }} />
+                            )}
                             {uploading && (
                                 <div style={{ position: "absolute", inset: 0, background: "rgba(0,0,0,0.45)", display: "flex", alignItems: "center", justifyContent: "center", flexDirection: "column", gap: 8 }}>
                                     <div style={{ width: 28, height: 28, border: "3px solid rgba(255,255,255,0.3)", borderTopColor: "white", borderRadius: "50%", animation: "spin 0.8s linear infinite" }} />
@@ -297,15 +366,17 @@ export default function BulletinBoardPage() {
                             )}
                         </div>
                     )}
+                    {uploadError && (
+                        <p style={{ fontSize: 11, color: "#e53e3e", marginTop: 6, display: "flex", alignItems: "center", gap: 4 }}>⚠ {uploadError}</p>
+                    )}
 
                     {/* Action buttons */}
                     <div style={{ marginTop: 8, paddingTop: 8, borderTop: "1px solid var(--color-border)" }}>
                         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                            {/* Hidden native file input */}
                             <input
                                 ref={fileInputRef}
                                 type="file"
-                                accept="image/*"
+                                accept="image/jpeg,image/jpg,image/png,image/gif,image/webp,video/mp4,video/quicktime,video/webm,application/pdf"
                                 style={{ display: "none" }}
                                 onChange={handleFileChange}
                                 id="bulletin-file-input"
@@ -316,8 +387,8 @@ export default function BulletinBoardPage() {
                                 style={{ display: "flex", alignItems: "center", gap: 6, border: "1px solid var(--color-border)", background: "var(--color-surface)" }}
                                 onClick={() => fileInputRef.current?.click()}
                             >
-                                <ImageIcon size={14} />
-                                {attachedFile ? attachedFile.name.length > 20 ? attachedFile.name.slice(0, 18) + "…" : attachedFile.name : "Add Photo"}
+                                <Paperclip size={14} />
+                                {attachedFile ? attachedFile.name.length > 20 ? attachedFile.name.slice(0, 18) + "…" : attachedFile.name : "Add Media"}
                             </button>
                             <button
                                 className="btn btn-primary btn-sm"
@@ -328,6 +399,7 @@ export default function BulletinBoardPage() {
                                 <Send size={14} /> {posting ? (uploading ? "Uploading…" : "Posting…") : "Post"}
                             </button>
                         </div>
+                        <p style={{ fontSize: 10, color: "var(--color-text-muted)", marginTop: 6 }}>Images (JPEG/PNG/GIF/WebP) up to 10 MB · Videos (MP4/MOV/WebM) up to 80 MB · PDF up to 20 MB</p>
                     </div>
                 </div>
 
@@ -398,8 +470,9 @@ export default function BulletinBoardPage() {
                                 <p style={{ fontSize: 14, lineHeight: 1.6, color: isCensored ? "var(--color-text-muted)" : "var(--color-text-primary)", marginBottom: 10, whiteSpace: "pre-wrap", fontStyle: isCensored ? "italic" : "normal" }}>{isCensored ? m.content : renderContent(m.content)}</p>
                                 
                                 {m.mediaUrl && !isCensored && (
-                                    <PostImage
+                                    <PostMedia
                                         src={m.mediaUrl}
+                                        mediaType={m.mediaType}
                                         style={{ borderRadius: "var(--radius-md)", marginBottom: 10, maxHeight: 220, overflow: "hidden" }}
                                     />
                                 )}
@@ -459,8 +532,9 @@ export default function BulletinBoardPage() {
                                 </div>
                                 <p style={{ fontSize: 13, lineHeight: 1.5, marginBottom: 8, whiteSpace: "pre-wrap" }}>{renderContent(selectedPost.content)}</p>
                                 {selectedPost.mediaUrl && (
-                                    <PostImage
+                                    <PostMedia
                                         src={selectedPost.mediaUrl}
+                                        mediaType={selectedPost.mediaType}
                                         style={{ borderRadius: "var(--radius-md)", maxHeight: 150, overflow: "hidden", marginBottom: 8 }}
                                     />
                                 )}
