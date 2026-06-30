@@ -3,9 +3,94 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useQuery, useMutation } from "convex/react";
 import { api } from "../../../convex/_generated/api";
-import { Bell, Heart, MessageSquare, Share2, Send, X, Pin, HelpCircle, Image as ImageIcon, Check, Search } from "lucide-react";
+import { Bell, Heart, MessageSquare, Share2, Send, X, Pin, HelpCircle, Image as ImageIcon, Check, Search, ImageOff } from "lucide-react";
 import { EmployeeBottomNav } from "@/components/BottomNav";
 import { format } from "date-fns";
+
+// Resilient image component: shows a skeleton while loading, a fallback on error
+function PostImage({ src, style }: { src: string; style?: React.CSSProperties }) {
+    const [status, setStatus] = useState<"loading" | "loaded" | "error">("loading");
+
+    // Reset state whenever src changes (e.g. navigating between posts)
+    useEffect(() => { setStatus("loading"); }, [src]);
+
+    return (
+        <div style={{ position: "relative", ...style }}>
+            {/* Skeleton shown while loading */}
+            {status === "loading" && (
+                <div style={{
+                    position: "absolute", inset: 0,
+                    background: "linear-gradient(90deg, var(--color-border) 25%, var(--color-surface) 50%, var(--color-border) 75%)",
+                    backgroundSize: "200% 100%",
+                    animation: "shimmer 1.4s infinite",
+                    borderRadius: "inherit",
+                }} />
+            )}
+
+            {/* Error fallback */}
+            {status === "error" && (
+                <div style={{
+                    display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center",
+                    gap: 6, padding: "20px 16px",
+                    background: "var(--color-surface)",
+                    border: "1px dashed var(--color-border)",
+                    borderRadius: "inherit",
+                    color: "var(--color-text-muted)",
+                    minHeight: 80,
+                }}>
+                    <ImageOff size={22} />
+                    <span style={{ fontSize: 11 }}>Image couldn't load</span>
+                </div>
+            )}
+
+            {/* Actual image — always mounted so onLoad/onError fire */}
+            <img
+                src={src}
+                alt="Post attachment"
+                loading="lazy"
+                crossOrigin="anonymous"
+                onLoad={() => setStatus("loaded")}
+                onError={() => setStatus("error")}
+                style={{
+                    display: status === "error" ? "none" : "block",
+                    opacity: status === "loaded" ? 1 : 0,
+                    transition: "opacity 0.3s ease",
+                    width: "100%",
+                    height: "100%",
+                    objectFit: "cover",
+                    borderRadius: "inherit",
+                }}
+            />
+        </div>
+    );
+}
+
+// Splits plain text content into segments and renders URLs as clickable links
+const URL_REGEX = /(https?:\/\/[^\s]+)/g;
+function renderContent(text: string) {
+    const parts = text.split(URL_REGEX);
+    return parts.map((part, i) =>
+        URL_REGEX.test(part) ? (
+            <a
+                key={i}
+                href={part}
+                target="_blank"
+                rel="noopener noreferrer"
+                style={{
+                    color: "var(--color-primary)",
+                    textDecoration: "underline",
+                    wordBreak: "break-all",
+                    fontWeight: 500,
+                }}
+                onClick={(e) => e.stopPropagation()}
+            >
+                {part}
+            </a>
+        ) : (
+            <span key={i}>{part}</span>
+        )
+    );
+}
 
 // Sample premium high-resolution wellness/notice photos for quick user selection in local dev!
 const IMAGE_PRESETS = [
@@ -296,14 +381,12 @@ export default function BulletinBoardPage() {
                                 </div>
 
                                 {/* Content */}
-                                <p style={{ fontSize: 14, lineHeight: 1.6, color: isCensored ? "var(--color-text-muted)" : "var(--color-text-primary)", marginBottom: 10, whiteSpace: "pre-line", fontStyle: isCensored ? "italic" : "normal" }}>{m.content}</p>
+                                <p style={{ fontSize: 14, lineHeight: 1.6, color: isCensored ? "var(--color-text-muted)" : "var(--color-text-primary)", marginBottom: 10, whiteSpace: "pre-wrap", fontStyle: isCensored ? "italic" : "normal" }}>{isCensored ? m.content : renderContent(m.content)}</p>
                                 
                                 {m.mediaUrl && !isCensored && (
-                                    <img 
-                                        src={m.mediaUrl} 
-                                        alt="Attachment" 
-                                        onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }}
-                                        style={{ width: "100%", borderRadius: "var(--radius-md)", marginBottom: 10, maxHeight: 220, objectFit: "cover" }} 
+                                    <PostImage
+                                        src={m.mediaUrl}
+                                        style={{ borderRadius: "var(--radius-md)", marginBottom: 10, maxHeight: 220, overflow: "hidden" }}
                                     />
                                 )}
 
@@ -360,8 +443,13 @@ export default function BulletinBoardPage() {
                                         <p style={{ fontSize: 11, color: "var(--color-text-secondary)" }}>{timeAgo(selectedPost.createdAt)}</p>
                                     </div>
                                 </div>
-                                <p style={{ fontSize: 13, lineHeight: 1.5, marginBottom: 8 }}>{selectedPost.content}</p>
-                                {selectedPost.mediaUrl && <img src={selectedPost.mediaUrl} alt="" style={{ width: "100%", borderRadius: "var(--radius-md)", maxHeight: 150, objectFit: "cover", marginBottom: 8 }} />}
+                                <p style={{ fontSize: 13, lineHeight: 1.5, marginBottom: 8, whiteSpace: "pre-wrap" }}>{renderContent(selectedPost.content)}</p>
+                                {selectedPost.mediaUrl && (
+                                    <PostImage
+                                        src={selectedPost.mediaUrl}
+                                        style={{ borderRadius: "var(--radius-md)", maxHeight: 150, overflow: "hidden", marginBottom: 8 }}
+                                    />
+                                )}
                                 <div style={{ display: "flex", gap: "var(--spacing-md)", borderTop: "1px solid var(--color-border)", paddingTop: 8 }}>
                                     <button onClick={() => auth && toggleLike({ messageId: selectedPost._id, userId: auth.id })} style={{ display: "flex", alignItems: "center", gap: 4, background: "none", border: "none", cursor: "pointer", fontSize: 12, color: selectedPost.likes?.includes(auth?.id) ? "var(--color-primary)" : "var(--color-text-secondary)", fontWeight: selectedPost.likes?.includes(auth?.id) ? 600 : 400 }}>
                                         <Heart size={14} fill={selectedPost.likes?.includes(auth?.id) ? "var(--color-primary)" : "none"} /> {selectedPost.likes?.length ?? 0}
@@ -394,7 +482,7 @@ export default function BulletinBoardPage() {
                                                     </div>
                                                     <span style={{ fontSize: 10, color: "var(--color-text-secondary)" }}>{timeAgo(reply.createdAt)}</span>
                                                 </div>
-                                                <p style={{ lineHeight: 1.4, wordBreak: "break-word" }}>{reply.content}</p>
+                                                <p style={{ lineHeight: 1.4, wordBreak: "break-word", whiteSpace: "pre-wrap" }}>{renderContent(reply.content)}</p>
                                             </div>
                                         </div>
                                     ))}
