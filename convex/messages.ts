@@ -118,6 +118,32 @@ export const getReplies = query({
     },
 });
 
+// Admin-only: returns ALL replies (including deleted/censored) for moderation
+export const getAllRepliesAdmin = query({
+    args: { parentId: v.id("messages") },
+    handler: async (ctx, args) => {
+        const replies = await ctx.db.query("messages")
+            .withIndex("by_parent", (q) => q.eq("parentId", args.parentId))
+            .order("asc")
+            .collect();
+        const result = [];
+        for (const r of replies) {
+            const user = await ctx.db.get(r.userId);
+            
+            const mediaUrl = r.mediaStorageId 
+                ? await ctx.storage.getUrl(r.mediaStorageId) 
+                : r.mediaUrl;
+
+            result.push({ 
+                ...r, 
+                mediaUrl: mediaUrl || undefined, 
+                user 
+            });
+        }
+        return result;
+    },
+});
+
 // Admin: soft-delete a post (hidden from employees, recoverable)
 export const deleteMessage = mutation({
     args: { messageId: v.id("messages") },

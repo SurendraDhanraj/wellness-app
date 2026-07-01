@@ -13,6 +13,7 @@ export default function AdminBulletinPage() {
     const [activeTab, setActiveTab] = useState<"announcements" | "q&a">("announcements");
     const [searchQuery, setSearchQuery] = useState("");
     const [confirmAction, setConfirmAction] = useState<{ type: "delete" | "censor"; post: any } | null>(null);
+    const [selectedPost, setSelectedPost] = useState<any>(null);
 
     useEffect(() => {
         const stored = localStorage.getItem("heritage_auth");
@@ -28,6 +29,7 @@ export default function AdminBulletinPage() {
     }, [router]);
 
     const messages = useQuery(api.messages.getAllMessagesAdmin, { group: activeTab }) || [];
+    const replies = useQuery(api.messages.getAllRepliesAdmin, selectedPost ? { parentId: selectedPost._id } : "skip") || [];
     const deleteMessage = useMutation(api.messages.deleteMessage);
     const restoreMessage = useMutation(api.messages.restoreMessage);
     const censorMessage = useMutation(api.messages.censorMessage);
@@ -189,7 +191,13 @@ export default function AdminBulletinPage() {
                                     {/* Stats row */}
                                     <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 10, fontSize: 12, color: "var(--color-admin-text-muted)" }}>
                                         <span style={{ display: "flex", alignItems: "center", gap: 4 }}><Heart size={13} /> {m.likes?.length ?? 0}</span>
-                                        <span style={{ display: "flex", alignItems: "center", gap: 4 }}><MessageSquare size={13} /> {m.replyCount ?? 0} replies</span>
+                                        <button 
+                                            onClick={() => setSelectedPost(m)}
+                                            style={{ display: "flex", alignItems: "center", gap: 4, background: "var(--color-admin-surface)", border: "1px solid var(--color-admin-border)", padding: "2px 8px", borderRadius: 4, cursor: "pointer", fontSize: 11, color: "var(--color-admin-text-muted)" }}
+                                            id={`view-replies-${m._id}`}
+                                        >
+                                            <MessageSquare size={13} /> {m.replyCount ?? 0} replies (Moderate)
+                                        </button>
                                     </div>
 
                                     {/* Action buttons */}
@@ -230,6 +238,127 @@ export default function AdminBulletinPage() {
                 )}
             </main>
 
+            {/* Replies Moderation Modal */}
+            {selectedPost && (
+                <div className="modal-overlay" onClick={() => setSelectedPost(null)}>
+                    <div className="modal-sheet admin" onClick={(e) => e.stopPropagation()} style={{ maxHeight: "80dvh", display: "flex", flexDirection: "column", textAlign: "left" }}>
+                        <div className="modal-handle" style={{ background: "var(--color-admin-border)" }} />
+                        
+                        {/* Header */}
+                        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "var(--spacing-md)", flexShrink: 0 }}>
+                            <h2 className="modal-title admin" style={{ marginBottom: 0 }}>Moderate Replies</h2>
+                            <button 
+                                onClick={() => setSelectedPost(null)}
+                                style={{ background: "none", border: "none", cursor: "pointer", color: "var(--color-admin-text-muted)" }}
+                            >
+                                <X size={20} />
+                            </button>
+                        </div>
+
+                        {/* Scrollable replies container */}
+                        <div style={{ flex: 1, overflowY: "auto", paddingRight: 4, marginBottom: "var(--spacing-md)" }}>
+                            {/* Original Post reference */}
+                            <div className="card admin" style={{ marginBottom: "var(--spacing-md)", background: "var(--color-admin-surface)", border: "1px solid var(--color-admin-border)" }}>
+                                <p style={{ fontSize: 11, fontWeight: 700, textTransform: "uppercase", color: "var(--color-admin-text-muted)", marginBottom: 6 }}>Original Post</p>
+                                <p style={{ fontSize: 12, color: "var(--color-admin-text)", fontWeight: 600 }}>{selectedPost.user?.firstName} {selectedPost.user?.surname}</p>
+                                <p style={{ fontSize: 12, color: "var(--color-admin-text-muted)", marginTop: 2, lineHeight: 1.4 }}>{selectedPost.content}</p>
+                            </div>
+
+                            <h3 style={{ fontSize: 13, fontWeight: 700, color: "var(--color-admin-text)", marginBottom: "var(--spacing-sm)" }}>
+                                Replies ({replies.length})
+                            </h3>
+
+                            {replies.length === 0 ? (
+                                <div style={{ textAlign: "center", padding: "30px 0", color: "var(--color-admin-text-muted)" }}>
+                                    <p style={{ fontSize: 12 }}>No replies to moderate.</p>
+                                </div>
+                            ) : (
+                                <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+                                    {replies.map((reply: any) => {
+                                        const isReplyDeleted = reply.isDeleted === true;
+                                        const isReplyCensored = reply.isCensored === true;
+                                        const replyStatusColor = isReplyDeleted ? "var(--color-error)" : isReplyCensored ? "var(--color-warning)" : "var(--color-success)";
+                                        const replyStatusLabel = isReplyDeleted ? "Hidden" : isReplyCensored ? "Censored" : "Active";
+
+                                        return (
+                                            <div 
+                                                key={reply._id} 
+                                                style={{ 
+                                                    display: "flex", 
+                                                    flexDirection: "column", 
+                                                    gap: 8, 
+                                                    background: "var(--color-admin-surface)", 
+                                                    border: "1px solid var(--color-admin-border)", 
+                                                    borderLeft: `3px solid ${replyStatusColor}`, 
+                                                    borderRadius: "var(--radius-md)", 
+                                                    padding: 12, 
+                                                    opacity: isReplyDeleted ? 0.65 : 1 
+                                                }}
+                                            >
+                                                <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                                                    <div style={{ width: 28, height: 28, borderRadius: "50%", background: "var(--color-admin-card)", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 700, fontSize: 12, color: "var(--color-admin-text)", flexShrink: 0 }}>
+                                                        {(reply.user?.firstName || "?")[0].toUpperCase()}
+                                                    </div>
+                                                    <div style={{ flex: 1, minWidth: 0 }}>
+                                                        <div style={{ display: "flex", alignItems: "center", gap: 6, flexWrap: "wrap" }}>
+                                                            <p style={{ fontWeight: 700, fontSize: 12, color: "var(--color-admin-text)" }}>
+                                                                {reply.user?.firstName} {reply.user?.surname}
+                                                            </p>
+                                                            {reply.user?.role !== "employee" && (
+                                                                <span style={{ background: "var(--color-primary)22", color: "var(--color-primary)", fontSize: 8, fontWeight: 700, padding: "0px 4px", borderRadius: 3, textTransform: "uppercase" }}>
+                                                                    {reply.user?.role === "super_admin" ? "S-Admin" : "Admin"}
+                                                                </span>
+                                                            )}
+                                                            <span style={{ fontSize: 9, fontWeight: 700, padding: "0px 6px", borderRadius: 99, background: `${replyStatusColor}22`, color: replyStatusColor, marginLeft: "auto" }}>
+                                                                    {replyStatusLabel}
+                                                            </span>
+                                                        </div>
+                                                        <p style={{ fontSize: 10, color: "var(--color-admin-text-muted)" }}>{timeAgo(reply.createdAt)}</p>
+                                                    </div>
+                                                </div>
+                                                <p style={{ fontSize: 12, lineHeight: 1.5, color: isReplyCensored ? "var(--color-admin-text-muted)" : "var(--color-admin-text)", fontStyle: isReplyCensored ? "italic" : "normal", whiteSpace: "pre-wrap" }}>
+                                                    {reply.content}
+                                                </p>
+                                                <div style={{ display: "flex", gap: 8, marginTop: 4, borderTop: "1px solid var(--color-admin-border)", paddingTop: 8 }}>
+                                                    {isReplyDeleted ? (
+                                                        <button
+                                                            onClick={() => handleRestore(reply)}
+                                                            style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", gap: 4, background: "var(--color-success)22", color: "var(--color-success)", border: "1px solid var(--color-success)44", borderRadius: "var(--radius-sm)", padding: "5px 8px", fontSize: 11, fontWeight: 700, cursor: "pointer" }}
+                                                            id={`restore-reply-${reply._id}`}
+                                                        >
+                                                            <RotateCcw size={12} /> Restore Reply
+                                                        </button>
+                                                    ) : (
+                                                        <>
+                                                            {!isReplyCensored && (
+                                                                <button
+                                                                    onClick={() => setConfirmAction({ type: "censor", post: reply })}
+                                                                    style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", gap: 4, background: "var(--color-warning)22", color: "var(--color-warning)", border: "1px solid var(--color-warning)44", borderRadius: "var(--radius-sm)", padding: "5px 8px", fontSize: 11, fontWeight: 700, cursor: "pointer" }}
+                                                                    id={`censor-reply-${reply._id}`}
+                                                                >
+                                                                    <EyeOff size={12} /> Censor Reply
+                                                                </button>
+                                                            )}
+                                                            <button
+                                                                onClick={() => setConfirmAction({ type: "delete", post: reply })}
+                                                                style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", gap: 4, background: "#DC262622", color: "#DC2626", border: "1px solid #DC262644", borderRadius: "var(--radius-sm)", padding: "5px 8px", fontSize: 11, fontWeight: 700, cursor: "pointer" }}
+                                                                id={`delete-reply-${reply._id}`}
+                                                            >
+                                                                <Trash2 size={12} /> Hide Reply
+                                                            </button>
+                                                        </>
+                                                    )}
+                                                </div>
+                                            </div>
+                                        );
+                                    })}
+                                </div>
+                            )}
+                        </div>
+                    </div>
+                </div>
+            )}
+
             {/* Confirm Action Modal */}
             {confirmAction && (
                 <div className="modal-overlay" onClick={() => setConfirmAction(null)}>
@@ -239,12 +368,12 @@ export default function AdminBulletinPage() {
                             {confirmAction.type === "delete" ? <Trash2 size={24} color="#DC2626" /> : <AlertTriangle size={24} color="var(--color-warning)" />}
                         </div>
                         <h2 className="modal-title admin">
-                            {confirmAction.type === "delete" ? "Hide Post?" : "Censor Post?"}
+                            {confirmAction.type === "delete" ? "Hide Item?" : "Censor Item?"}
                         </h2>
                         <p style={{ fontSize: 13, color: "var(--color-admin-text-muted)", marginBottom: "var(--spacing-lg)", lineHeight: 1.6 }}>
                             {confirmAction.type === "delete"
-                                ? "This post will be hidden from all employees. You can restore it at any time."
-                                : "The post content will be replaced with an admin removal notice. This cannot be undone."}
+                                ? "This item will be hidden from all employees. You can restore it at any time."
+                                : "The item content will be replaced with an admin removal notice. This cannot be undone."}
                         </p>
                         <div style={{ background: "var(--color-admin-surface)", borderRadius: "var(--radius-md)", padding: "10px 14px", marginBottom: "var(--spacing-lg)", textAlign: "left" }}>
                             <p style={{ fontSize: 12, color: "var(--color-admin-text)", fontWeight: 600 }}>{confirmAction.post.user?.firstName} {confirmAction.post.user?.surname}</p>
@@ -263,7 +392,7 @@ export default function AdminBulletinPage() {
                                 style={{ flex: 1, background: confirmAction.type === "delete" ? "#DC2626" : "var(--color-warning)", color: "white", border: "none", borderRadius: "var(--radius-lg)", padding: "12px", fontWeight: 700, cursor: "pointer" }}
                                 id="confirm-action-btn"
                             >
-                                {confirmAction.type === "delete" ? "Hide Post" : "Censor Post"}
+                                {confirmAction.type === "delete" ? "Hide" : "Censor"}
                             </button>
                         </div>
                     </div>
