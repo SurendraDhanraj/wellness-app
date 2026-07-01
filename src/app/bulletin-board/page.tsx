@@ -221,7 +221,7 @@ export default function BulletinBoardPage() {
         e.preventDefault();
         if (!auth || !content.trim() || posting) return;
         setPosting(true);
-        let mediaUrl: string | undefined;
+        let mediaStorageId: string | undefined;
         let mediaType: MediaType | undefined;
         try {
             if (attachedFile) {
@@ -233,8 +233,7 @@ export default function BulletinBoardPage() {
                     body: attachedFile,
                 });
                 const { storageId } = await res.json();
-                const convexSiteUrl = process.env.NEXT_PUBLIC_CONVEX_URL?.replace(".cloud", ".site") ?? "";
-                mediaUrl = `${convexSiteUrl}/api/storage/${storageId}`;
+                mediaStorageId = storageId;
                 mediaType = attachedMediaType;
                 setUploading(false);
             }
@@ -243,7 +242,7 @@ export default function BulletinBoardPage() {
                 userId: auth.id,
                 content: content.trim(),
                 group: activeTab,
-                mediaUrl,
+                mediaStorageId,
                 mediaType,
             });
 

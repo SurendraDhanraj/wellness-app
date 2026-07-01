@@ -14,7 +14,17 @@ export const getMessages = query({
             const user = await ctx.db.get(m.userId);
             const replies = await ctx.db.query("messages")
                 .withIndex("by_parent", (q) => q.eq("parentId", m._id)).collect();
-            result.push({ ...m, user, replyCount: replies.length });
+            
+            const mediaUrl = m.mediaStorageId 
+                ? await ctx.storage.getUrl(m.mediaStorageId) 
+                : m.mediaUrl;
+
+            result.push({ 
+                ...m, 
+                mediaUrl: mediaUrl || undefined, 
+                user, 
+                replyCount: replies.length 
+            });
         }
         return result;
     },
@@ -33,7 +43,17 @@ export const getAllMessagesAdmin = query({
             const user = await ctx.db.get(m.userId);
             const replies = await ctx.db.query("messages")
                 .withIndex("by_parent", (q) => q.eq("parentId", m._id)).collect();
-            result.push({ ...m, user, replyCount: replies.length });
+
+            const mediaUrl = m.mediaStorageId 
+                ? await ctx.storage.getUrl(m.mediaStorageId) 
+                : m.mediaUrl;
+
+            result.push({ 
+                ...m, 
+                mediaUrl: mediaUrl || undefined, 
+                user, 
+                replyCount: replies.length 
+            });
         }
         return result;
     },
@@ -44,6 +64,7 @@ export const postMessage = mutation({
         userId: v.id("users"),
         content: v.string(),
         group: v.string(),
+        mediaStorageId: v.optional(v.string()),
         mediaUrl: v.optional(v.string()),
         mediaType: v.optional(v.union(v.literal("image"), v.literal("video"), v.literal("pdf"))),
         parentId: v.optional(v.id("messages")),
@@ -82,7 +103,16 @@ export const getReplies = query({
         for (const r of replies) {
             if (r.isDeleted) continue;
             const user = await ctx.db.get(r.userId);
-            result.push({ ...r, user });
+            
+            const mediaUrl = r.mediaStorageId 
+                ? await ctx.storage.getUrl(r.mediaStorageId) 
+                : r.mediaUrl;
+
+            result.push({ 
+                ...r, 
+                mediaUrl: mediaUrl || undefined, 
+                user 
+            });
         }
         return result;
     },
