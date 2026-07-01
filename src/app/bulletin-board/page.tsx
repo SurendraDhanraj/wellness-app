@@ -98,7 +98,6 @@ function PostMedia({ src, mediaType, style }: { src: string; mediaType?: MediaTy
                 src={src}
                 alt="Post attachment"
                 loading="lazy"
-                crossOrigin="anonymous"
                 onLoad={() => setImgStatus("loaded")}
                 onError={() => setImgStatus("error")}
                 style={{
