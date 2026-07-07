@@ -126,7 +126,6 @@ export default function LeaderboardPage() {
                                 <div className="avatar-placeholder" style={{ width: 36, height: 36, fontSize: 14 }}>{(u.firstName || "?")[0]}</div>
                                 <div>
                                     <p style={{ fontSize: 14, fontWeight: 600 }}>{u.firstName} {u.surname}</p>
-                                    <p style={{ fontSize: 12, color: "var(--color-text-secondary)" }}>{u.departmentId || ""}</p>
                                 </div>
                             </div>
                             <span style={{ fontSize: 16, fontWeight: 700, color: "var(--color-primary)" }}>{getValue(u).toLocaleString()} <span style={{ fontSize: 11, fontWeight: 400 }}>{getUnit()}</span></span>
