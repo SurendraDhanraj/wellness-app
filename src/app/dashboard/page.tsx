@@ -131,8 +131,8 @@ export default function DashboardPage() {
                         alt="Know Your Numbers Campaign" 
                         style={{ width: "100%", height: "auto", display: "block" }} 
                     />
-                    <div style={{ padding: "12px 16px", textAlign: "center", borderTop: "1px solid var(--color-border)", background: "var(--color-surface)" }}>
-                        <p style={{ fontSize: 13, fontWeight: 700, color: "var(--color-primary)", letterSpacing: "0.01em" }}>
+                    <div style={{ padding: "14px 12px", textAlign: "center", borderTop: "1px solid var(--color-border)", background: "var(--color-surface)" }}>
+                        <p style={{ fontSize: 18, fontWeight: 800, color: "var(--color-primary)", letterSpacing: "0.02em", lineHeight: 1.2 }}>
                             Healthy Habits Today. Stronger Tomorrow
                         </p>
                     </div>
