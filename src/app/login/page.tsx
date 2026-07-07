@@ -165,7 +165,7 @@ export default function LoginPage() {
             </div>
 
             <div style={{ padding: "var(--spacing-md)", textAlign: "center", borderTop: "1px solid var(--color-border)" }}>
-                <p style={{ fontSize: 12, color: "var(--color-text-muted)" }}>© 2025 Heritage Petroleum Company Limited</p>
+                <p style={{ fontSize: 12, color: "var(--color-text-muted)" }}>© 2025 Dr. Surendra Dhanraj</p>
             </div>
         </div>
     );
