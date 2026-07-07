@@ -61,6 +61,37 @@ export default function LoginPage() {
                     <img src="/logo.png" alt="Heritage Petroleum" style={{ height: 80, objectFit: "contain", marginBottom: "var(--spacing-md)" }} />
                     <h1 style={{ fontSize: 22, fontWeight: 800, color: "var(--color-primary)" }}>Wellness Tracker</h1>
                     <p style={{ fontSize: 13, color: "var(--color-text-secondary)", marginTop: 4 }}>Heritage Petroleum Company Limited</p>
+                    <div style={{ 
+                        marginTop: "var(--spacing-lg)", 
+                        borderRadius: "var(--radius-md)", 
+                        overflow: "hidden", 
+                        boxShadow: "var(--shadow-sm)", 
+                        border: "1px solid var(--color-border)",
+                        background: "white",
+                        maxWidth: 340,
+                        margin: "var(--spacing-md) auto 0 auto",
+                        transition: "transform var(--transition-fast), box-shadow var(--transition-fast)",
+                    }}
+                    onMouseEnter={(e) => {
+                        e.currentTarget.style.transform = "scale(1.02)";
+                        e.currentTarget.style.boxShadow = "var(--shadow-md)";
+                    }}
+                    onMouseLeave={(e) => {
+                        e.currentTarget.style.transform = "scale(1)";
+                        e.currentTarget.style.boxShadow = "var(--shadow-sm)";
+                    }}
+                    >
+                        <img 
+                            src="/know-your-numbers.png" 
+                            alt="Know Your Numbers Campaign" 
+                            style={{ width: "100%", height: "auto", display: "block" }} 
+                        />
+                        <div style={{ padding: "12px 10px", textAlign: "center", borderTop: "1px solid var(--color-border)", background: "var(--color-surface)" }}>
+                            <p style={{ fontSize: 20, fontWeight: 800, color: "var(--color-primary)", letterSpacing: "0.02em", lineHeight: 1.2 }}>
+                                Healthy Habits Today.<br />Stronger Tomorrow
+                            </p>
+                        </div>
+                    </div>
                 </div>
 
                 {/* Form */}
