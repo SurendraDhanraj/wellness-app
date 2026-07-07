@@ -14,6 +14,7 @@ export default function AdminBulletinPage() {
     const [searchQuery, setSearchQuery] = useState("");
     const [confirmAction, setConfirmAction] = useState<{ type: "delete" | "censor"; post: any } | null>(null);
     const [selectedPost, setSelectedPost] = useState<any>(null);
+    const [lightboxImage, setLightboxImage] = useState<string | null>(null);
 
     useEffect(() => {
         const stored = localStorage.getItem("heritage_auth");
@@ -185,7 +186,20 @@ export default function AdminBulletinPage() {
                                     </p>
 
                                     {m.mediaUrl && !isCensored && (
-                                        <img src={m.mediaUrl} alt="Attachment" onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }} style={{ width: "100%", borderRadius: "var(--radius-md)", maxHeight: 160, objectFit: "cover", marginBottom: 8 }} />
+                                         <img 
+                                             src={m.mediaUrl} 
+                                             alt="Attachment" 
+                                             onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }} 
+                                             onClick={() => setLightboxImage(m.mediaUrl)}
+                                             style={{ 
+                                                 width: "100%", 
+                                                 borderRadius: "var(--radius-md)", 
+                                                 maxHeight: 160, 
+                                                 objectFit: "cover", 
+                                                 marginBottom: 8,
+                                                 cursor: "zoom-in"
+                                             }} 
+                                         />
                                     )}
 
                                     {/* Stats row */}
@@ -395,6 +409,59 @@ export default function AdminBulletinPage() {
                                 {confirmAction.type === "delete" ? "Hide" : "Censor"}
                             </button>
                         </div>
+                    </div>
+                </div>
+            )}
+            {/* Fullscreen Lightbox Modal */}
+            {lightboxImage && (
+                <div 
+                    onClick={() => setLightboxImage(null)} 
+                    style={{
+                        position: "fixed",
+                        inset: 0,
+                        backgroundColor: "rgba(0, 0, 0, 0.85)",
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        zIndex: 9999,
+                        cursor: "zoom-out",
+                        backdropFilter: "blur(4px)",
+                    }}
+                >
+                    <div style={{ position: "relative", maxWidth: "90%", maxHeight: "90%", display: "flex", alignItems: "center", justifyContent: "center" }} onClick={(e) => e.stopPropagation()}>
+                        <img 
+                            src={lightboxImage} 
+                            alt="Expanded preview" 
+                            style={{ 
+                                maxWidth: "100%", 
+                                maxHeight: "85vh", 
+                                objectFit: "contain", 
+                                borderRadius: "var(--radius-md)",
+                                boxShadow: "0 10px 30px rgba(0,0,0,0.5)"
+                            }} 
+                        />
+                        <button 
+                            onClick={() => setLightboxImage(null)}
+                            style={{
+                                position: "absolute",
+                                top: -40,
+                                right: 0,
+                                background: "none",
+                                border: "none",
+                                color: "white",
+                                fontSize: 14,
+                                cursor: "pointer",
+                                display: "flex",
+                                alignItems: "center",
+                                gap: 6,
+                                fontWeight: 600,
+                                padding: "8px 12px",
+                                borderRadius: "var(--radius-sm)",
+                                backgroundColor: "rgba(0,0,0,0.5)"
+                            }}
+                        >
+                            <X size={16} /> Close
+                        </button>
                     </div>
                 </div>
             )}

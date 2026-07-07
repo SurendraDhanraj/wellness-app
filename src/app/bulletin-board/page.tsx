@@ -17,7 +17,7 @@ function getMediaType(mimeType: string): MediaType {
 }
 
 // Unified media renderer for image, video and PDF attachments
-function PostMedia({ src, mediaType, style }: { src: string; mediaType?: MediaType; style?: React.CSSProperties }) {
+function PostMedia({ src, mediaType, style, onImageClick }: { src: string; mediaType?: MediaType; style?: React.CSSProperties; onImageClick?: (src: string) => void }) {
     const [imgStatus, setImgStatus] = useState<"loading" | "loaded" | "error">("loading");
     useEffect(() => { setImgStatus("loading"); }, [src]);
 
@@ -100,6 +100,12 @@ function PostMedia({ src, mediaType, style }: { src: string; mediaType?: MediaTy
                 loading="lazy"
                 onLoad={() => setImgStatus("loaded")}
                 onError={() => setImgStatus("error")}
+                onClick={(e) => {
+                    if (onImageClick) {
+                        e.stopPropagation();
+                        onImageClick(src);
+                    }
+                }}
                 style={{
                     display: imgStatus === "error" ? "none" : "block",
                     opacity: imgStatus === "loaded" ? 1 : 0,
@@ -108,6 +114,7 @@ function PostMedia({ src, mediaType, style }: { src: string; mediaType?: MediaTy
                     height: "100%",
                     objectFit: "cover",
                     borderRadius: "inherit",
+                    cursor: onImageClick ? "zoom-in" : "default",
                 }}
             />
         </div>
@@ -149,6 +156,9 @@ export default function BulletinBoardPage() {
 
     // Tab state: "announcements" (Information Repository) | "q&a" (Discussions & Help)
     const [activeTab, setActiveTab] = useState<"announcements" | "q&a">("announcements");
+
+    // Lightbox image state
+    const [lightboxImage, setLightboxImage] = useState<string | null>(null);
 
     // Post composer states
     const [content, setContent] = useState("");
@@ -471,6 +481,7 @@ export default function BulletinBoardPage() {
                                     <PostMedia
                                         src={m.mediaUrl}
                                         mediaType={m.mediaType}
+                                        onImageClick={setLightboxImage}
                                         style={{ borderRadius: "var(--radius-md)", marginBottom: 10, maxHeight: 220, overflow: "hidden" }}
                                     />
                                 )}
@@ -533,6 +544,7 @@ export default function BulletinBoardPage() {
                                     <PostMedia
                                         src={selectedPost.mediaUrl}
                                         mediaType={selectedPost.mediaType}
+                                        onImageClick={setLightboxImage}
                                         style={{ borderRadius: "var(--radius-md)", maxHeight: 150, overflow: "hidden", marginBottom: 8 }}
                                     />
                                 )}
@@ -598,6 +610,59 @@ export default function BulletinBoardPage() {
                                 <Send size={14} />
                             </button>
                         </div>
+                    </div>
+                </div>
+            )}
+            {/* Fullscreen Lightbox Modal */}
+            {lightboxImage && (
+                <div 
+                    onClick={() => setLightboxImage(null)} 
+                    style={{
+                        position: "fixed",
+                        inset: 0,
+                        backgroundColor: "rgba(0, 0, 0, 0.85)",
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        zIndex: 9999,
+                        cursor: "zoom-out",
+                        backdropFilter: "blur(4px)",
+                    }}
+                >
+                    <div style={{ position: "relative", maxWidth: "90%", maxHeight: "90%", display: "flex", alignItems: "center", justifyContent: "center" }} onClick={(e) => e.stopPropagation()}>
+                        <img 
+                            src={lightboxImage} 
+                            alt="Expanded preview" 
+                            style={{ 
+                                maxWidth: "100%", 
+                                maxHeight: "85vh", 
+                                objectFit: "contain", 
+                                borderRadius: "var(--radius-md)",
+                                boxShadow: "0 10px 30px rgba(0,0,0,0.5)"
+                            }} 
+                        />
+                        <button 
+                            onClick={() => setLightboxImage(null)}
+                            style={{
+                                position: "absolute",
+                                top: -40,
+                                right: 0,
+                                background: "none",
+                                border: "none",
+                                color: "white",
+                                fontSize: 14,
+                                cursor: "pointer",
+                                display: "flex",
+                                alignItems: "center",
+                                gap: 6,
+                                fontWeight: 600,
+                                padding: "8px 12px",
+                                borderRadius: "var(--radius-sm)",
+                                backgroundColor: "rgba(0,0,0,0.5)"
+                            }}
+                        >
+                            <X size={16} /> Close
+                        </button>
                     </div>
                 </div>
             )}
