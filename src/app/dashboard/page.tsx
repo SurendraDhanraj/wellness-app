@@ -104,6 +104,35 @@ export default function DashboardPage() {
             </header>
 
             <main className="page-content">
+                {/* Campaign Banner: Know Your Numbers */}
+                <div 
+                    onClick={() => router.push("/health")}
+                    style={{ 
+                        marginBottom: "var(--spacing-md)", 
+                        borderRadius: "var(--radius-lg)", 
+                        overflow: "hidden", 
+                        boxShadow: "var(--shadow-sm)", 
+                        background: "white", 
+                        border: "1px solid var(--color-border)",
+                        cursor: "pointer",
+                        transition: "transform var(--transition-fast), box-shadow var(--transition-fast)",
+                    }}
+                    onMouseEnter={(e) => {
+                        e.currentTarget.style.transform = "scale(1.02)";
+                        e.currentTarget.style.boxShadow = "var(--shadow-md)";
+                    }}
+                    onMouseLeave={(e) => {
+                        e.currentTarget.style.transform = "scale(1)";
+                        e.currentTarget.style.boxShadow = "var(--shadow-sm)";
+                    }}
+                >
+                    <img 
+                        src="/know-your-numbers.png" 
+                        alt="Know Your Numbers Campaign" 
+                        style={{ width: "100%", height: "auto", display: "block" }} 
+                    />
+                </div>
+
                 {/* Points + Rank */}
                 <div className="card-grid-2" style={{ marginBottom: "var(--spacing-md)" }}>
                     <div className="card" style={{ background: "linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-dark) 100%)", border: "none", color: "white" }}>
