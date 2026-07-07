@@ -131,6 +131,11 @@ export default function DashboardPage() {
                         alt="Know Your Numbers Campaign" 
                         style={{ width: "100%", height: "auto", display: "block" }} 
                     />
+                    <div style={{ padding: "12px 16px", textAlign: "center", borderTop: "1px solid var(--color-border)", background: "var(--color-surface)" }}>
+                        <p style={{ fontSize: 13, fontWeight: 700, color: "var(--color-primary)", letterSpacing: "0.01em" }}>
+                            Healthy Habits Today. Stronger Tomorrow
+                        </p>
+                    </div>
                 </div>
 
                 {/* Points + Rank */}
